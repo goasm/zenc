@@ -1,17 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"os"
 )
 
 var (
 	encrypt bool
 	decrypt bool
-	input   string
 	passwd  string
 	output  string
+	input   string
 )
 
 func init() {
