@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	flag "github.com/spf13/pflag"
 	"os"
+
+	"github.com/radonlab/zenc"
+	flag "github.com/spf13/pflag"
 )
 
 var (
@@ -35,12 +37,6 @@ func printUsageErr(message string) {
 	os.Exit(1)
 }
 
-func encryptFile(inFile *os.File, outFile *os.File) {
-}
-
-func decryptFile(inFile *os.File, outFile *os.File) {
-}
-
 func process() {
 	var inFile, outFile *os.File
 	var err error
@@ -66,9 +62,9 @@ func process() {
 	}
 	switch {
 	case encrypt:
-		encryptFile(inFile, outFile)
+		zenc.EncryptFile(inFile, outFile, passwd)
 	case decrypt:
-		decryptFile(inFile, outFile)
+		zenc.DecryptFile(inFile, outFile, passwd)
 	default:
 		printUsageErr("error: missing option [-e|-d]")
 	}
