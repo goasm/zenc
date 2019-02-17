@@ -19,7 +19,7 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		printErr("Usage: zenc [OPTION...] FILE")
+		fmt.Fprintln(os.Stderr, "Usage: zenc [OPTION...] FILE")
 		flag.PrintDefaults()
 	}
 	flag.BoolVarP(&help, "help", "h", false, "print help message")
@@ -29,60 +29,76 @@ func init() {
 	flag.StringVarP(&output, "output", "o", "", "file to write output\nUse - to write to standard output")
 }
 
-func printErr(message string) {
-	fmt.Fprintln(os.Stderr, message)
+func error(message string) {
+	fmt.Fprintln(os.Stderr, "error:", message)
+	os.Exit(1)
 }
 
-func printUsage() {
+func usageError(message string) {
+	fmt.Fprintln(os.Stderr, "error:", message)
 	flag.Usage()
 	os.Exit(1)
 }
 
-func printUsageErr(message string) {
-	printErr(message)
-	printUsage()
+func prepareInput() (*os.File, bool) {
+	if input == "-" {
+		// read from standard input
+		return os.Stdin, false
+	}
+	file, err := os.Open(input)
+	if err != nil {
+		error(fmt.Sprintf("No such file: %s", input))
+	}
+	return file, true
+}
+
+func prepareOutput() (*os.File, bool) {
+	if output == "-" {
+		// write to standard output
+		return os.Stdout, false
+	}
+	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		error(fmt.Sprintf("No such file: %s", output))
+	}
+	return file, true
 }
 
 func process() {
-	var inFile, outFile *os.File
-	var err error
-	if input == "-" {
-		// read from standard input
-		inFile = os.Stdin
-	} else {
-		inFile, err = os.Open(input)
-		if err != nil {
-			printErr(fmt.Sprintf("No such file: %s", input))
-		}
-		defer inFile.Close()
-	}
-	if output == "-" {
-		// write to standard output
-		outFile = os.Stdout
-	} else {
-		outFile, err = os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			printErr(fmt.Sprintf("No such file: %s", output))
-		}
-		defer outFile.Close()
-	}
 	switch {
 	case encrypt:
+		inFile, inClosable := prepareInput()
+		outFile, outClosable := prepareOutput()
 		zenc.EncryptFile(inFile, outFile, passwd)
+		if inClosable {
+			inFile.Close()
+		}
+		if outClosable {
+			outFile.Close()
+		}
 	case decrypt:
+		inFile, inClosable := prepareInput()
+		outFile, outClosable := prepareOutput()
 		zenc.DecryptFile(inFile, outFile, passwd)
+		if inClosable {
+			inFile.Close()
+		}
+		if outClosable {
+			outFile.Close()
+		}
 	default:
-		printUsageErr("error: missing option [-e|-d]")
+		usageError("missing option [-e|-d]")
 	}
 }
 
 func main() {
 	flag.Parse()
 	if help {
-		printUsage()
+		flag.Usage()
+		return
 	}
 	if flag.NArg() < 1 {
-		printUsageErr("error: missing input file")
+		usageError("missing input file")
 	}
 	input = flag.Arg(0)
 	process()
