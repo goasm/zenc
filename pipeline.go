@@ -45,6 +45,7 @@ func (p *Pipeline) Run(r io.Reader, w io.Writer) {
 		buffer = p.Process(buffer)
 		nw, err := w.Write(buffer[:nr])
 		if nw != nr || err != nil {
+			// TODO:(error handle)
 			panic(err)
 		}
 	}
