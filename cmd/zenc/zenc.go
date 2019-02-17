@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	help    bool
 	encrypt bool
 	decrypt bool
 	passwd  string
@@ -18,23 +19,28 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		printErr("Usage: cipher [OPTION...] FILE")
+		printErr("Usage: zenc [OPTION...] FILE")
 		flag.PrintDefaults()
 	}
-	flag.BoolVar(&encrypt, "e", false, "encrypt file")
-	flag.BoolVar(&decrypt, "d", false, "decrypt file")
-	flag.StringVar(&passwd, "p", "", "password to be applied")
-	flag.StringVar(&output, "o", "", "file to write output\nUse - to write to standard output")
+	flag.BoolVarP(&help, "help", "h", false, "print help message")
+	flag.BoolVarP(&encrypt, "encrypt", "e", false, "encrypt file")
+	flag.BoolVarP(&decrypt, "decrypt", "d", false, "decrypt file")
+	flag.StringVarP(&passwd, "passwd", "p", "", "password to be applied")
+	flag.StringVarP(&output, "output", "o", "", "file to write output\nUse - to write to standard output")
 }
 
 func printErr(message string) {
 	fmt.Fprintln(os.Stderr, message)
 }
 
-func printUsageErr(message string) {
-	printErr(message)
+func printUsage() {
 	flag.Usage()
 	os.Exit(1)
+}
+
+func printUsageErr(message string) {
+	printErr(message)
+	printUsage()
 }
 
 func process() {
@@ -72,6 +78,9 @@ func process() {
 
 func main() {
 	flag.Parse()
+	if help {
+		printUsage()
+	}
 	if flag.NArg() < 1 {
 		printUsageErr("error: missing input file")
 	}
