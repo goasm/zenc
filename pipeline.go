@@ -6,7 +6,7 @@ import (
 
 const defaultBufferSize = 4096
 
-// Stage represents a data processor in pipeline
+// Stage represents a data processor in Pipeline
 type Stage interface {
 	Process([]byte) []byte
 }
@@ -16,12 +16,12 @@ type Pipeline struct {
 	ss []Stage
 }
 
-// NewPipeline creates a pipeline
+// NewPipeline creates a Pipeline
 func NewPipeline() *Pipeline {
 	return &Pipeline{}
 }
 
-// AddStage appends Stage s to the pipeline
+// AddStage appends Stage s to the Pipeline
 func (p *Pipeline) AddStage(s Stage) {
 	p.ss = append(p.ss, s)
 }
