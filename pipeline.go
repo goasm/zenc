@@ -35,17 +35,30 @@ func (p *Pipeline) Process(data []byte) []byte {
 }
 
 // Run reads data from r, processes it and writes the processed data to w
-func (p *Pipeline) Run(r io.Reader, w io.Writer) {
+func (p *Pipeline) Run(r io.Reader, w io.Writer) (n int64, err error) {
 	buffer := make([]byte, defaultBufferSize)
 	for {
-		nr, err := r.Read(buffer)
-		if err == io.EOF {
+		nr, er := r.Read(buffer)
+		if nr > 0 {
+			nw, ew := w.Write(p.Process(buffer[:nr]))
+			if nw > 0 {
+				n += int64(nw)
+			}
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
 			break
 		}
-		nw, err := w.Write(p.Process(buffer[:nr]))
-		if nw != nr || err != nil {
-			// TODO:(error handle)
-			panic(err)
-		}
 	}
+	return n, err
 }
