@@ -42,8 +42,7 @@ func (p *Pipeline) Run(r io.Reader, w io.Writer) {
 		if err == io.EOF {
 			break
 		}
-		buffer = p.Process(buffer)
-		nw, err := w.Write(buffer[:nr])
+		nw, err := w.Write(p.Process(buffer[:nr]))
 		if nw != nr || err != nil {
 			// TODO:(error handle)
 			panic(err)
