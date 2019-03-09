@@ -26,20 +26,24 @@ func NewFileHeader() *FileHeader {
 	return header
 }
 
-// ReadDataFrom reads the data of FileHeader from r
-func (h *FileHeader) ReadDataFrom(r io.Reader) {
-	err := binary.Read(r, binary.BigEndian, h)
+// ReadFrom reads the data of FileHeader from r
+func (h *FileHeader) ReadFrom(r io.Reader) (n int64, err error) {
+	n = int64(binary.Size(h))
+	err = binary.Read(r, binary.BigEndian, h)
 	if err != nil {
-		panic(err)
+		n = 0
 	}
+	return n, err
 }
 
-// WriteDataTo writes the data of FileHeader to w
-func (h *FileHeader) WriteDataTo(w io.Writer) {
-	err := binary.Write(w, binary.BigEndian, h)
+// WriteTo writes the data of FileHeader to w
+func (h *FileHeader) WriteTo(w io.Writer) (n int64, err error) {
+	n = int64(binary.Size(h))
+	err = binary.Write(w, binary.BigEndian, h)
 	if err != nil {
-		panic(err)
+		n = 0
 	}
+	return n, err
 }
 
 // FileFooter is used to store extra file information
