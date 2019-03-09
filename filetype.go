@@ -8,14 +8,16 @@ import (
 
 // FileHeader is used to identify encrypted file
 type FileHeader struct {
-	Magic uint32
-	IV    [16]byte
+	Magic   uint32
+	Version uint16
+	IV      [16]byte
 }
 
 // NewFileHeader creates a new FileHeader
 func NewFileHeader() *FileHeader {
 	header := &FileHeader{
-		Magic: 0x5A454E43, // ZENC
+		Magic:   0x5A454E43, // ZENC
+		Version: 0x0100,     // 1.0
 	}
 	_, err := rand.Read(header.IV[:])
 	if err != nil {
