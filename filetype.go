@@ -55,3 +55,23 @@ type FileFooter struct {
 func NewFileFooter() *FileFooter {
 	return &FileFooter{0}
 }
+
+// ReadFrom reads the data of FileFooter from r
+func (f *FileFooter) ReadFrom(r io.Reader) (n int64, err error) {
+	n = int64(binary.Size(f))
+	err = binary.Read(r, binary.BigEndian, f)
+	if err != nil {
+		n = 0
+	}
+	return n, err
+}
+
+// WriteTo writes the data of FileFooter to w
+func (f *FileFooter) WriteTo(w io.Writer) (n int64, err error) {
+	n = int64(binary.Size(f))
+	err = binary.Write(w, binary.BigEndian, f)
+	if err != nil {
+		n = 0
+	}
+	return n, err
+}
