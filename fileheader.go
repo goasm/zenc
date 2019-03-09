@@ -8,16 +8,14 @@ import (
 
 // FileHeader is used to identify encrypted file
 type FileHeader struct {
-	Magic    uint32
-	IV       [16]byte
-	Checksum uint16
+	Magic uint32
+	IV    [16]byte
 }
 
 // NewFileHeader creates a new FileHeader
 func NewFileHeader() *FileHeader {
 	header := &FileHeader{
-		Magic:    0x5A454E43, // ZENC
-		Checksum: 0,
+		Magic: 0x5A454E43, // ZENC
 	}
 	_, err := rand.Read(header.IV[:])
 	if err != nil {
@@ -40,4 +38,14 @@ func (h *FileHeader) WriteDataTo(w io.Writer) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// FileFooter is used to store extra file information
+type FileFooter struct {
+	Checksum uint32
+}
+
+// NewFileFooter creates a new FileFooter
+func NewFileFooter() *FileFooter {
+	return &FileFooter{0}
 }
