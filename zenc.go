@@ -14,18 +14,18 @@ func keygen(pass string, len int) []byte {
 
 // EncryptFile encrypts file using the given password
 func EncryptFile(ifile, ofile *os.File, pass string) {
-	head := NewFileHead()
-	head.WriteDataTo(ofile)
+	header := NewFileHeader()
+	header.WriteTo(ofile)
 	pipeline := NewPipeline()
-	pipeline.AddStage(NewEncrypter(keygen(pass, 32), head.IV[:]))
+	pipeline.AddStage(NewEncrypter(keygen(pass, 32), header.IV[:]))
 	pipeline.Run(ifile, ofile)
 }
 
 // DecryptFile decrypts file using the given password
 func DecryptFile(ifile, ofile *os.File, pass string) {
-	head := FileHead{}
-	head.ReadDataFrom(ifile)
+	header := FileHeader{}
+	header.ReadFrom(ifile)
 	pipeline := NewPipeline()
-	pipeline.AddStage(NewDecrypter(keygen(pass, 32), head.IV[:]))
+	pipeline.AddStage(NewDecrypter(keygen(pass, 32), header.IV[:]))
 	pipeline.Run(ifile, ofile)
 }
