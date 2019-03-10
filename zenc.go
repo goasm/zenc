@@ -2,6 +2,7 @@ package zenc
 
 import (
 	"crypto/sha256"
+	"io"
 	"os"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -13,19 +14,42 @@ func keygen(pass string, len int) []byte {
 }
 
 // EncryptFile encrypts file using the given password
-func EncryptFile(ifile, ofile *os.File, pass string) {
+func EncryptFile(ifile, ofile *os.File, pass string) error {
+	info, err := ifile.Stat()
+	if err != nil {
+		return err
+	}
 	header := NewFileHeader()
-	header.WriteTo(ofile)
+	header.Size = uint32(info.Size())
+	_, err = header.WriteTo(ofile)
+	if err != nil {
+		return err
+	}
 	pipeline := NewPipeline()
 	pipeline.AddStage(NewEncrypter(keygen(pass, 32), header.IV[:]))
 	pipeline.Run(ifile, ofile)
+	footer := NewFileFooter()
+	_, err = footer.WriteTo(ofile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DecryptFile decrypts file using the given password
-func DecryptFile(ifile, ofile *os.File, pass string) {
+func DecryptFile(ifile, ofile *os.File, pass string) error {
 	header := FileHeader{}
-	header.ReadFrom(ifile)
+	_, err := header.ReadFrom(ifile)
+	if err != nil {
+		return err
+	}
 	pipeline := NewPipeline()
 	pipeline.AddStage(NewDecrypter(keygen(pass, 32), header.IV[:]))
-	pipeline.Run(ifile, ofile)
+	pipeline.Run(io.LimitReader(ifile, int64(header.Size)), ofile)
+	footer := FileFooter{}
+	_, err = footer.ReadFrom(ifile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
