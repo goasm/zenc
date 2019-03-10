@@ -10,20 +10,23 @@ import (
 type FileHeader struct {
 	Magic   uint32
 	Version uint16
+	Size    uint32
 	IV      [16]byte
 }
 
 // NewFileHeader creates a new FileHeader
 func NewFileHeader() *FileHeader {
-	header := &FileHeader{
-		Magic:   0x5A454E43, // ZENC
-		Version: 0x0100,     // 1.0
-	}
-	_, err := rand.Read(header.IV[:])
+	rd := [16]byte{}
+	_, err := rand.Read(rd[:])
 	if err != nil {
 		panic(err)
 	}
-	return header
+	return &FileHeader{
+		Magic:   0x5A454E43, // ZENC
+		Version: 0x0100,     // 1.0
+		Size:    0,
+		IV:      rd,
+	}
 }
 
 // ReadFrom reads the data of FileHeader from r
