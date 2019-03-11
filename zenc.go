@@ -2,6 +2,7 @@ package zenc
 
 import (
 	"crypto/sha256"
+	"errors"
 	"io"
 	"os"
 
@@ -11,6 +12,13 @@ import (
 func keygen(pass string, len int) []byte {
 	salt := []byte("zenc-v1.0")
 	return pbkdf2.Key([]byte(pass), salt, 4096, len, sha256.New)
+}
+
+func verifyChecksum(expected, actual uint32) error {
+	if expected != actual {
+		return errors.New("wrong checksum")
+	}
+	return nil
 }
 
 // EncryptFile encrypts file using the given password
@@ -53,6 +61,10 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	pipeline.Run(io.LimitReader(ifile, int64(header.Size)), ofile)
 	footer := FileFooter{}
 	_, err = footer.ReadFrom(ifile)
+	if err != nil {
+		return err
+	}
+	err = verifyChecksum(footer.Checksum, checksum)
 	if err != nil {
 		return err
 	}
