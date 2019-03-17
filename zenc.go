@@ -2,7 +2,6 @@ package zenc
 
 import (
 	"crypto/sha256"
-	"errors"
 	"io"
 	"os"
 
@@ -16,7 +15,7 @@ func keygen(pass string, len int) []byte {
 
 func verifyChecksum(expected, actual uint32) error {
 	if expected != actual {
-		return errors.New("wrong checksum")
+		return ErrWrongChecksum
 	}
 	return nil
 }
