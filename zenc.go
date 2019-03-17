@@ -2,7 +2,6 @@ package zenc
 
 import (
 	"crypto/sha256"
-	"io"
 	"os"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -27,7 +26,6 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 		return err
 	}
 	header := NewFileHeader()
-	header.Size = uint32(info.Size())
 	_, err = header.WriteTo(ofile)
 	if err != nil {
 		return err
@@ -57,7 +55,7 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	pipeline := NewPipeline()
 	pipeline.AddStage(NewDecrypter(keygen(pass, 32), header.IV[:]))
 	pipeline.AddStage(NewChecksum(&checksum))
-	pipeline.Run(io.LimitReader(ifile, int64(header.Size)), ofile)
+	pipeline.Run(ifile, ofile)
 	footer := FileFooter{}
 	_, err = footer.ReadFrom(ifile)
 	if err != nil {

@@ -8,9 +8,8 @@ import (
 
 // FileHeader is used to identify encrypted file
 type FileHeader struct {
-	Magic   uint32
-	Version uint16
-	Size    uint32
+	Magic   [4]byte
+	Version [2]byte
 	IV      [16]byte
 }
 
@@ -22,9 +21,8 @@ func NewFileHeader() *FileHeader {
 		panic(err)
 	}
 	return &FileHeader{
-		Magic:   0x5A454E43, // ZENC
-		Version: 0x0100,     // 1.0
-		Size:    0,
+		Magic:   [4]byte{0x5A, 0x45, 0x4E, 0x43}, // ZENC
+		Version: [2]byte{0x01, 0x00},             // 1.0
 		IV:      rd,
 	}
 }
@@ -32,7 +30,7 @@ func NewFileHeader() *FileHeader {
 // ReadFrom reads the data of FileHeader from r
 func (h *FileHeader) ReadFrom(r io.Reader) (n int64, err error) {
 	n = int64(binary.Size(h))
-	err = binary.Read(r, binary.BigEndian, h)
+	err = binary.Read(r, binary.LittleEndian, h)
 	if err != nil {
 		n = 0
 	}
@@ -42,7 +40,7 @@ func (h *FileHeader) ReadFrom(r io.Reader) (n int64, err error) {
 // WriteTo writes the data of FileHeader to w
 func (h *FileHeader) WriteTo(w io.Writer) (n int64, err error) {
 	n = int64(binary.Size(h))
-	err = binary.Write(w, binary.BigEndian, h)
+	err = binary.Write(w, binary.LittleEndian, h)
 	if err != nil {
 		n = 0
 	}
@@ -62,7 +60,7 @@ func NewFileFooter() *FileFooter {
 // ReadFrom reads the data of FileFooter from r
 func (f *FileFooter) ReadFrom(r io.Reader) (n int64, err error) {
 	n = int64(binary.Size(f))
-	err = binary.Read(r, binary.BigEndian, f)
+	err = binary.Read(r, binary.LittleEndian, f)
 	if err != nil {
 		n = 0
 	}
@@ -72,7 +70,7 @@ func (f *FileFooter) ReadFrom(r io.Reader) (n int64, err error) {
 // WriteTo writes the data of FileFooter to w
 func (f *FileFooter) WriteTo(w io.Writer) (n int64, err error) {
 	n = int64(binary.Size(f))
-	err = binary.Write(w, binary.BigEndian, f)
+	err = binary.Write(w, binary.LittleEndian, f)
 	if err != nil {
 		n = 0
 	}
