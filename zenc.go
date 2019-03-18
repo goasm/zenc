@@ -21,12 +21,8 @@ func verifyChecksum(expected, actual uint32) error {
 
 // EncryptFile encrypts file using the given password
 func EncryptFile(ifile, ofile *os.File, pass string) error {
-	info, err := ifile.Stat()
-	if err != nil {
-		return err
-	}
 	header := NewFileHeader()
-	_, err = header.WriteTo(ofile)
+	_, err := header.WriteTo(ofile)
 	if err != nil {
 		return err
 	}
