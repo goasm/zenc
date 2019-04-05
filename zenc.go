@@ -26,13 +26,8 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	checksum := uint32(0)
-	pipeline := NewPipeline()
-	pipeline.AddStage(NewChecksum(&checksum))
-	pipeline.AddStage(NewEncrypter(keygen(pass, 32), header.IV[:]))
-	pipeline.Run(ifile, ofile)
 	footer := NewFileFooter()
-	footer.Checksum = checksum
+	footer.Checksum = 0
 	_, err = footer.WriteTo(ofile)
 	if err != nil {
 		return err
@@ -47,17 +42,12 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	checksum := uint32(0)
-	pipeline := NewPipeline()
-	pipeline.AddStage(NewDecrypter(keygen(pass, 32), header.IV[:]))
-	pipeline.AddStage(NewChecksum(&checksum))
-	pipeline.Run(ifile, ofile)
 	footer := FileFooter{}
 	_, err = footer.ReadFrom(ifile)
 	if err != nil {
 		return err
 	}
-	err = verifyChecksum(footer.Checksum, checksum)
+	err = verifyChecksum(footer.Checksum, 0)
 	if err != nil {
 		return err
 	}
