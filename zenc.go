@@ -1,16 +1,8 @@
 package zenc
 
 import (
-	"crypto/sha256"
 	"os"
-
-	"golang.org/x/crypto/pbkdf2"
 )
-
-func keygen(pass string, len int) []byte {
-	salt := []byte("zenc-v1.0")
-	return pbkdf2.Key([]byte(pass), salt, 4096, len, sha256.New)
-}
 
 func verifyChecksum(expected, actual uint32) error {
 	if expected != actual {
