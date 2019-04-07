@@ -1,6 +1,7 @@
 package zenc
 
 import (
+	"io"
 	"os"
 )
 
@@ -18,6 +19,13 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
+	var writer io.Writer = ofile
+	writer = NewCryptoWriter(pass, header.IV[:], writer)
+	writer = NewChunkWriter(writer)
+	_, err = io.Copy(writer, ifile)
+	if err != nil {
+		return err
+	}
 	footer := NewFileFooter()
 	footer.Checksum = 0
 	_, err = footer.WriteTo(ofile)
@@ -31,6 +39,13 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 func DecryptFile(ifile, ofile *os.File, pass string) error {
 	header := FileHeader{}
 	_, err := header.ReadFrom(ifile)
+	if err != nil {
+		return err
+	}
+	var reader io.Reader = ifile
+	reader = NewChunkReader(reader)
+	reader = NewCryptoReader(pass, header.IV[:], reader)
+	_, err = io.Copy(ofile, reader)
 	if err != nil {
 		return err
 	}
