@@ -11,16 +11,31 @@ const (
 )
 
 type chunkReader struct {
+	b bytes.Buffer
+	t []byte
 	r io.Reader
 }
 
 // NewChunkReader creates a Reader that reads chunks into continuous bytes
 func NewChunkReader(r io.Reader) io.Reader {
-	return &chunkReader{r}
+	return &chunkReader{bytes.Buffer{}, make([]byte, maxChunkSize), r}
 }
 
 func (c *chunkReader) Read(dst []byte) (n int, err error) {
-	n, err = c.r.Read(dst)
+	m := len(dst)
+	prefix := [4]byte{}
+	for c.b.Len() < m {
+		_, err = c.r.Read(prefix[:])
+		if err != nil {
+			break
+		}
+		l := int64(binary.LittleEndian.Uint32(prefix[:]))
+		_, err = io.CopyBuffer(&c.b, io.LimitReader(c.r, l), c.t)
+		if err != nil {
+			break
+		}
+	}
+	n, err = c.b.Read(dst)
 	return
 }
 
