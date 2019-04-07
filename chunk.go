@@ -10,18 +10,18 @@ const (
 	maxChunkSize = 4096
 )
 
-type chunkReader struct {
+type Reader struct {
 	b bytes.Buffer
 	t []byte
 	r io.Reader
 }
 
 // NewChunkReader creates a Reader that reads chunks into continuous bytes
-func NewChunkReader(r io.Reader) io.Reader {
-	return &chunkReader{bytes.Buffer{}, make([]byte, maxChunkSize), r}
+func NewChunkReader(r io.Reader) *Reader {
+	return &Reader{bytes.Buffer{}, make([]byte, maxChunkSize), r}
 }
 
-func (c *chunkReader) Read(dst []byte) (n int, err error) {
+func (c *Reader) Read(dst []byte) (n int, err error) {
 	m := len(dst)
 	prefix := [4]byte{}
 	for c.b.Len() < m {
@@ -39,17 +39,17 @@ func (c *chunkReader) Read(dst []byte) (n int, err error) {
 	return
 }
 
-type chunkWriter struct {
+type Writer struct {
 	b bytes.Buffer
 	w io.Writer
 }
 
 // NewChunkWriter creates a Writer that writes continuous bytes to chunks
-func NewChunkWriter(w io.Writer) io.Writer {
-	return &chunkWriter{bytes.Buffer{}, w}
+func NewChunkWriter(w io.Writer) *Writer {
+	return &Writer{bytes.Buffer{}, w}
 }
 
-func (c *chunkWriter) Write(src []byte) (n int, err error) {
+func (c *Writer) Write(src []byte) (n int, err error) {
 	n, err = c.b.Write(src)
 	if err != nil {
 		return
@@ -69,7 +69,7 @@ func (c *chunkWriter) Write(src []byte) (n int, err error) {
 	return
 }
 
-func (c *chunkWriter) Flush() (err error) {
+func (c *Writer) Flush() (err error) {
 	prefix := [4]byte{}
 	binary.LittleEndian.PutUint32(prefix[:], uint32(c.b.Len()))
 	_, err = c.w.Write(prefix[:])
