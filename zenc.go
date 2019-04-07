@@ -19,10 +19,13 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	var writer io.Writer = ofile
-	writer = NewCryptoWriter(pass, header.IV[:], writer)
-	writer = NewChunkWriter(writer)
-	_, err = io.Copy(writer, ifile)
+	writer1 := NewCryptoWriter(pass, header.IV[:], ofile)
+	writer2 := NewChunkWriter(writer1)
+	_, err = io.Copy(writer2, ifile)
+	if err != nil {
+		return err
+	}
+	err = writer2.Flush()
 	if err != nil {
 		return err
 	}
@@ -42,10 +45,9 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	var reader io.Reader = ifile
-	reader = NewChunkReader(reader)
-	reader = NewCryptoReader(pass, header.IV[:], reader)
-	_, err = io.Copy(ofile, reader)
+	reader1 := NewCryptoReader(pass, header.IV[:], ifile)
+	reader2 := NewChunkReader(reader1)
+	_, err = io.Copy(ofile, reader2)
 	if err != nil {
 		return err
 	}
