@@ -57,7 +57,7 @@ func prepareOutput() (*os.File, bool) {
 		// write to standard output
 		return os.Stdout, false
 	}
-	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		error(fmt.Sprintf("No such file: %s", output))
 	}
