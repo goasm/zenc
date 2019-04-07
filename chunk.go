@@ -35,28 +35,35 @@ func NewChunkWriter(w io.Writer) io.Writer {
 }
 
 func (c *chunkWriter) Write(src []byte) (n int, err error) {
-	for c.b.Len() < maxChunkSize {
-		_, err = c.b.Write(src)
+	n, err = c.b.Write(src)
+	if err != nil {
+		return
+	}
+	prefix := [4]byte{}
+	for c.b.Len() >= maxChunkSize {
+		binary.LittleEndian.PutUint32(prefix[:], uint32(maxChunkSize))
+		_, err = c.w.Write(prefix[:])
+		if err != nil {
+			break
+		}
+		_, err = c.w.Write(c.b.Next(maxChunkSize))
 		if err != nil {
 			break
 		}
 	}
-	nw := 0
+	return
+}
+
+func (c *chunkWriter) Flush() (err error) {
 	prefix := [4]byte{}
-	chunk := []byte{}
-	for c.b.Len() > 0 {
-		chunk = c.b.Next(maxChunkSize)
-		binary.LittleEndian.PutUint32(prefix[:], uint32(len(chunk)))
-		nw, err = c.w.Write(prefix[:])
-		n += nw
-		if err != nil {
-			break
-		}
-		nw, err = c.w.Write(chunk)
-		n += nw
-		if err != nil {
-			break
-		}
+	binary.LittleEndian.PutUint32(prefix[:], uint32(c.b.Len()))
+	_, err = c.w.Write(prefix[:])
+	if err != nil {
+		return
+	}
+	_, err = c.w.Write(c.b.Bytes())
+	if err != nil {
+		return
 	}
 	return
 }
