@@ -19,16 +19,6 @@ func NewPipeline() *Pipeline {
 	return &Pipeline{}
 }
 
-// SetNext sets the next Stage
-func (p *Pipeline) SetNext(n Stage) {
-	p.next = n
-}
-
-// Next gets the next Stage
-func (p *Pipeline) Next() Stage {
-	return p.next
-}
-
 func (p *Pipeline) Write(data []byte) (int, error) {
 	return p.next.Write(data)
 }
