@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha256"
-	"io"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -14,22 +13,31 @@ func genKey(pass string, len int) []byte {
 	return pbkdf2.Key([]byte(pass), salt, 4096, len, sha256.New)
 }
 
-// NewCryptoReader creates a Reader that reads ciphertext into plaintext
-func NewCryptoReader(key string, iv []byte, r io.Reader) io.Reader {
-	block, err := aes.NewCipher(genKey(key, 32))
-	if err != nil {
-		panic(err)
-	}
-	stream := cipher.NewCTR(block, iv)
-	return &cipher.StreamReader{S: stream, R: r}
+// CryptoStage encrypts/decrypts input data using the cipher key-stream
+type CryptoStage struct {
+	stream cipher.Stream
+	next   Stage
 }
 
-// NewCryptoWriter creates a Writer that writes plaintext to ciphertext
-func NewCryptoWriter(key string, iv []byte, w io.Writer) io.Writer {
+// NewCryptoStage creates a Stage for both encryption and decryption
+func NewCryptoStage(key string, iv []byte) *CryptoStage {
 	block, err := aes.NewCipher(genKey(key, 32))
 	if err != nil {
 		panic(err)
 	}
 	stream := cipher.NewCTR(block, iv)
-	return &cipher.StreamWriter{S: stream, W: w}
+	return &CryptoStage{stream, nil}
+}
+
+func (c *CryptoStage) SetNext(n Stage) {
+	c.next = n
+}
+
+func (c *CryptoStage) Next() Stage {
+	return c.next
+}
+
+func (c *CryptoStage) Write(data []byte) (int, error) {
+	c.stream.XORKeyStream(data, data)
+	return c.next.Write(data)
 }
