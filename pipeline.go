@@ -9,6 +9,21 @@ type Stage interface {
 	Next() Stage
 }
 
+// MiddleStage processes data and writes them to next Stage
+type MiddleStage struct {
+	next Stage
+}
+
+// SetNext sets the next Stage
+func (ms *MiddleStage) SetNext(n Stage) {
+	ms.next = n
+}
+
+// Next gets the next Stage
+func (ms *MiddleStage) Next() Stage {
+	return ms.next
+}
+
 // Pipeline represents a data flow consisting of one or more Stages
 type Pipeline struct {
 	head Stage
