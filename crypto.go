@@ -15,8 +15,8 @@ func genKey(pass string, len int) []byte {
 
 // CryptoStage encrypts/decrypts input data using the cipher key-stream
 type CryptoStage struct {
+	MiddleStage
 	stream cipher.Stream
-	next   Stage
 }
 
 // NewCryptoStage creates a Stage for both encryption and decryption
@@ -26,18 +26,10 @@ func NewCryptoStage(key string, iv []byte) *CryptoStage {
 		panic(err)
 	}
 	stream := cipher.NewCTR(block, iv)
-	return &CryptoStage{stream, nil}
+	return &CryptoStage{MiddleStage{}, stream}
 }
 
-func (c *CryptoStage) SetNext(n Stage) {
-	c.next = n
-}
-
-func (c *CryptoStage) Next() Stage {
-	return c.next
-}
-
-func (c *CryptoStage) Write(data []byte) (int, error) {
-	c.stream.XORKeyStream(data, data)
-	return c.next.Write(data)
+func (cs *CryptoStage) Write(data []byte) (int, error) {
+	cs.stream.XORKeyStream(data, data)
+	return cs.next.Write(data)
 }
