@@ -10,6 +10,49 @@ const (
 	maxChunkSize = 4096
 )
 
+type ChunkStage struct {
+	MiddleStage
+	buffer bytes.Buffer
+}
+
+func NewChunkStage() *ChunkStage {
+	return &ChunkStage{MiddleStage{}, bytes.Buffer{}}
+}
+
+func (cs *ChunkStage) Write(data []byte) (n int, err error) {
+	n, err = cs.buffer.Write(data)
+	if err != nil {
+		return
+	}
+	prefix := [4]byte{}
+	for cs.buffer.Len() >= maxChunkSize {
+		binary.LittleEndian.PutUint32(prefix[:], uint32(maxChunkSize))
+		_, err = cs.next.Write(prefix[:])
+		if err != nil {
+			break
+		}
+		_, err = cs.next.Write(cs.buffer.Next(maxChunkSize))
+		if err != nil {
+			break
+		}
+	}
+	return
+}
+
+func (cs *ChunkStage) Flush() (err error) {
+	prefix := [4]byte{}
+	binary.LittleEndian.PutUint32(prefix[:], uint32(cs.buffer.Len()))
+	_, err = cs.next.Write(prefix[:])
+	if err != nil {
+		return
+	}
+	_, err = cs.next.Write(cs.buffer.Bytes())
+	if err != nil {
+		return
+	}
+	return
+}
+
 type Reader struct {
 	b bytes.Buffer
 	t []byte
@@ -36,49 +79,5 @@ func (c *Reader) Read(dst []byte) (n int, err error) {
 		}
 	}
 	n, err = c.b.Read(dst)
-	return
-}
-
-type Writer struct {
-	b bytes.Buffer
-	w io.Writer
-}
-
-// NewChunkWriter creates a Writer that writes continuous bytes to chunks
-func NewChunkWriter(w io.Writer) *Writer {
-	return &Writer{bytes.Buffer{}, w}
-}
-
-func (c *Writer) Write(src []byte) (n int, err error) {
-	n, err = c.b.Write(src)
-	if err != nil {
-		return
-	}
-	prefix := [4]byte{}
-	for c.b.Len() >= maxChunkSize {
-		binary.LittleEndian.PutUint32(prefix[:], uint32(maxChunkSize))
-		_, err = c.w.Write(prefix[:])
-		if err != nil {
-			break
-		}
-		_, err = c.w.Write(c.b.Next(maxChunkSize))
-		if err != nil {
-			break
-		}
-	}
-	return
-}
-
-func (c *Writer) Flush() (err error) {
-	prefix := [4]byte{}
-	binary.LittleEndian.PutUint32(prefix[:], uint32(c.b.Len()))
-	_, err = c.w.Write(prefix[:])
-	if err != nil {
-		return
-	}
-	_, err = c.w.Write(c.b.Bytes())
-	if err != nil {
-		return
-	}
 	return
 }
