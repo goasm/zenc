@@ -67,16 +67,24 @@ func (us *UnchunkStage) Write(data []byte) (n int, err error) {
 	if err != nil {
 		return
 	}
-	prefix := us.buffer.Bytes()[:4]
-	chunkSize := int(binary.LittleEndian.Uint32(prefix))
-	for us.buffer.Len() >= len(prefix)+chunkSize {
-		us.buffer.Next(len(prefix))
-		_, err = us.next.Write(us.buffer.Next(chunkSize))
+	for {
+		if us.buffer.Len() < 4 {
+			break
+		}
+		prefix := us.buffer.Bytes()[:4]
+		chunkSize := int(binary.LittleEndian.Uint32(prefix))
+		if chunkSize > maxChunkSize {
+			err = io.ErrShortBuffer
+			break
+		}
+		if us.buffer.Len() < 4+chunkSize {
+			break
+		}
+		chunk := us.buffer.Next(4 + chunkSize)
+		_, err = us.next.Write(chunk[4:])
 		if err != nil {
 			break
 		}
-		prefix = us.buffer.Bytes()[:4]
-		chunkSize = int(binary.LittleEndian.Uint32(prefix))
 	}
 	return
 }
