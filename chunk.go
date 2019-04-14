@@ -53,31 +53,30 @@ func (cs *ChunkStage) Flush() (err error) {
 	return
 }
 
-type Reader struct {
-	b bytes.Buffer
-	t []byte
-	r io.Reader
+type UnchunkStage struct {
+	MiddleStage
+	buffer bytes.Buffer
 }
 
-// NewChunkReader creates a Reader that reads chunks into continuous bytes
-func NewChunkReader(r io.Reader) *Reader {
-	return &Reader{bytes.Buffer{}, make([]byte, maxChunkSize), r}
+func NewUnchunkStage() *UnchunkStage {
+	return &UnchunkStage{MiddleStage{}, bytes.Buffer{}}
 }
 
-func (c *Reader) Read(dst []byte) (n int, err error) {
-	m := len(dst)
-	prefix := [4]byte{}
-	for c.b.Len() < m {
-		_, err = c.r.Read(prefix[:])
-		if err != nil {
-			break
-		}
-		l := int64(binary.LittleEndian.Uint32(prefix[:]))
-		_, err = io.CopyBuffer(&c.b, io.LimitReader(c.r, l), c.t)
-		if err != nil {
-			break
-		}
+func (us *UnchunkStage) Write(data []byte) (n int, err error) {
+	n, err = us.buffer.Write(data)
+	if err != nil {
+		return
 	}
-	n, err = c.b.Read(dst)
+	prefix := us.buffer.Bytes()[:4]
+	chunkSize := int(binary.LittleEndian.Uint32(prefix))
+	for us.buffer.Len() >= len(prefix)+chunkSize {
+		us.buffer.Next(len(prefix))
+		_, err = us.next.Write(us.buffer.Next(chunkSize))
+		if err != nil {
+			break
+		}
+		prefix = us.buffer.Bytes()[:4]
+		chunkSize = int(binary.LittleEndian.Uint32(prefix))
+	}
 	return
 }
