@@ -10,11 +10,13 @@ const (
 	maxChunkSize = 4096
 )
 
+// ChunkStage encodes contiguous bytes into data chunks
 type ChunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
 }
 
+// NewChunkStage creates a Stage for encoding data
 func NewChunkStage() *ChunkStage {
 	return &ChunkStage{MiddleStage{}, bytes.Buffer{}}
 }
@@ -39,6 +41,7 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	return
 }
 
+// Flush writes the rest of data to the underlying writer
 func (cs *ChunkStage) Flush() (err error) {
 	prefix := [4]byte{}
 	binary.LittleEndian.PutUint32(prefix[:], uint32(cs.buffer.Len()))
@@ -53,11 +56,13 @@ func (cs *ChunkStage) Flush() (err error) {
 	return
 }
 
+// UnchunkStage decodes data chunks to contiguous bytes
 type UnchunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
 }
 
+// NewUnchunkStage creates a Stage for decoding data
 func NewUnchunkStage() *UnchunkStage {
 	return &UnchunkStage{MiddleStage{}, bytes.Buffer{}}
 }
