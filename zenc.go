@@ -15,22 +15,21 @@ func verifyChecksum(expected, actual uint32) error {
 // EncryptFile encrypts file using the given password
 func EncryptFile(ifile, ofile *os.File, pass string) error {
 	header := NewFileHeader()
+	footer := NewFileFooter()
+	pipeline := NewPipeline()
+	checksum := NewChecksumStage()
+	pipeline.AddStage(checksum)
+	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
+	pipeline.AddStage(NewDestStage(ofile))
 	_, err := header.WriteTo(ofile)
 	if err != nil {
 		return err
 	}
-	writer1 := NewCryptoWriter(pass, header.IV[:], ofile)
-	writer2 := NewChunkWriter(writer1)
-	_, err = io.Copy(writer2, ifile)
+	_, err = io.Copy(pipeline, ifile)
 	if err != nil {
 		return err
 	}
-	err = writer2.Flush()
-	if err != nil {
-		return err
-	}
-	footer := NewFileFooter()
-	footer.Checksum = 0
+	footer.Checksum = checksum.Sum
 	_, err = footer.WriteTo(ofile)
 	if err != nil {
 		return err
@@ -41,22 +40,25 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 // DecryptFile decrypts file using the given password
 func DecryptFile(ifile, ofile *os.File, pass string) error {
 	header := FileHeader{}
+	footer := FileFooter{}
+	pipeline := NewPipeline()
+	checksum := NewChecksumStage()
 	_, err := header.ReadFrom(ifile)
 	if err != nil {
 		return err
 	}
-	reader1 := NewCryptoReader(pass, header.IV[:], ifile)
-	reader2 := NewChunkReader(reader1)
-	_, err = io.Copy(ofile, reader2)
+	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
+	pipeline.AddStage(checksum)
+	pipeline.AddStage(NewDestStage(ofile))
+	_, err = io.Copy(pipeline, ifile)
 	if err != nil {
 		return err
 	}
-	footer := FileFooter{}
 	_, err = footer.ReadFrom(ifile)
 	if err != nil {
 		return err
 	}
-	err = verifyChecksum(footer.Checksum, 0)
+	err = verifyChecksum(footer.Checksum, checksum.Sum)
 	if err != nil {
 		return err
 	}
