@@ -41,15 +41,15 @@ func TestChunkSimple(t *testing.T) {
 	total := 100
 	out := getTestChunk(total)
 	if out.Len() != total+chunkHeadSize {
-		t.Fatal("ChunkStage writes wrong length of bytes", out.Len())
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
 	if size1 != 100 {
-		t.Fatal("ChunkStage writes wrong chunk size", size1)
+		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
 	chunk1 := out.Next(100)
 	if chunk1[0] != 0 || chunk1[99] != 99 {
-		t.Fatal("ChunkStage writes wrong chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 }
 
@@ -57,23 +57,23 @@ func TestChunkLarge(t *testing.T) {
 	total := 5000
 	out := getTestChunk(total)
 	if out.Len() != total+chunkHeadSize*2 {
-		t.Fatal("ChunkStage writes wrong length of bytes", out.Len())
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
 	if size1 != 4096 {
-		t.Fatal("ChunkStage writes wrong chunk size", size1)
+		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
 	chunk1 := out.Next(4096)
 	if chunk1[0] != 0 || chunk1[4095] != 255 {
-		t.Fatal("ChunkStage writes wrong chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
 	if size2 != 904 {
-		t.Fatal("ChunkStage writes wrong chunk size", size2)
+		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
 	chunk2 := out.Next(904)
 	if chunk2[0] != 0 || chunk2[903] != 135 {
-		t.Fatal("ChunkStage writes wrong chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 }
 
@@ -90,10 +90,10 @@ func TestUnchunkSimple(t *testing.T) {
 	us.SetNext(zenc.NewDestStage(w))
 	io.Copy(us, r)
 	if w.Len() != 100 {
-		t.Fatal("UnchunkStage writes wrong length of bytes", w.Len())
+		t.Fatal("UnchunkStage writes a wrong total length", w.Len())
 	}
 	chunk := w.Next(100)
 	if chunk[0] != 0 || chunk[99] != 99 {
-		t.Fatal("UnchunkStage writes wrong chunk data")
+		t.Fatal("UnchunkStage writes mismatched chunk data")
 	}
 }
