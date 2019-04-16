@@ -28,7 +28,7 @@ func fillSequence(buf []byte) {
 	}
 }
 
-func getTestChunk(limit int) *bytes.Buffer {
+func getSampleChunkData(limit int) *bytes.Buffer {
 	data := new(bytes.Buffer)
 	cs := zenc.NewChunkStage()
 	cs.SetNext(zenc.NewDestStage(data))
@@ -39,7 +39,7 @@ func getTestChunk(limit int) *bytes.Buffer {
 
 func TestChunkSimple(t *testing.T) {
 	total := 100
-	out := getTestChunk(total)
+	out := getSampleChunkData(total)
 	if out.Len() != total+chunkHeadSize {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
@@ -55,7 +55,7 @@ func TestChunkSimple(t *testing.T) {
 
 func TestChunkLarge(t *testing.T) {
 	total := 5000
-	out := getTestChunk(total)
+	out := getSampleChunkData(total)
 	if out.Len() != total+chunkHeadSize*2 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
