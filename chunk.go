@@ -46,10 +46,9 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	if err != nil {
 		return
 	}
-	prefix := [4]byte{}
 	for cs.buffer.Len() >= maxChunkSize {
-		binary.LittleEndian.PutUint32(prefix[:], uint32(maxChunkSize))
-		_, err = cs.next.Write(prefix[:])
+		info := ChunkInfo{maxChunkSize}
+		_, err = cs.next.Write(EncodeChunkInfo(info))
 		if err != nil {
 			break
 		}
@@ -63,9 +62,8 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 
 // Flush writes the rest of data to the underlying writer
 func (cs *ChunkStage) Flush() (err error) {
-	prefix := [4]byte{}
-	binary.LittleEndian.PutUint32(prefix[:], uint32(cs.buffer.Len()))
-	_, err = cs.next.Write(prefix[:])
+	info := ChunkInfo{int32(cs.buffer.Len())}
+	_, err = cs.next.Write(EncodeChunkInfo(info))
 	if err != nil {
 		return
 	}
@@ -96,8 +94,8 @@ func (us *UnchunkStage) Write(data []byte) (n int, err error) {
 		if us.buffer.Len() < 4 {
 			break
 		}
-		prefix := us.buffer.Bytes()[:4]
-		chunkSize := int(binary.LittleEndian.Uint32(prefix))
+		info := DecodeChunkInfo(us.buffer.Bytes())
+		chunkSize := int(info.Size)
 		if chunkSize > maxChunkSize {
 			err = io.ErrShortBuffer
 			break
