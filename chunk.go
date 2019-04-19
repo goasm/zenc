@@ -92,7 +92,7 @@ func (us *UnchunkStage) Write(data []byte) (n int, err error) {
 		return
 	}
 	for {
-		if us.buffer.Len() < 4 {
+		if us.buffer.Len() < chunkInfoSize {
 			break
 		}
 		info := DecodeChunkInfo(us.buffer.Bytes())
@@ -101,11 +101,11 @@ func (us *UnchunkStage) Write(data []byte) (n int, err error) {
 			err = ErrLimitExceeded
 			break
 		}
-		if us.buffer.Len() < 4+chunkSize {
+		if us.buffer.Len() < chunkInfoSize+chunkSize {
 			break
 		}
-		chunk := us.buffer.Next(4 + chunkSize)
-		_, err = us.next.Write(chunk[4:])
+		chunk := us.buffer.Next(chunkInfoSize + chunkSize)
+		_, err = us.next.Write(chunk[chunkInfoSize:])
 		if err != nil {
 			break
 		}
