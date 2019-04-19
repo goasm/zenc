@@ -3,7 +3,6 @@ package zenc
 import (
 	"bytes"
 	"encoding/binary"
-	"io"
 )
 
 const (
@@ -97,7 +96,7 @@ func (us *UnchunkStage) Write(data []byte) (n int, err error) {
 		info := DecodeChunkInfo(us.buffer.Bytes())
 		chunkSize := int(info.Size)
 		if chunkSize > maxChunkSize {
-			err = io.ErrShortBuffer
+			err = ErrLimitExceeded
 			break
 		}
 		if us.buffer.Len() < 4+chunkSize {
