@@ -3,10 +3,12 @@ package zenc
 import (
 	"bytes"
 	"encoding/binary"
+	"unsafe"
 )
 
 const (
-	maxChunkSize = 4096
+	maxChunkSize  = 4096
+	chunkInfoSize = int(unsafe.Sizeof(ChunkInfo{}))
 )
 
 // ChunkInfo holds the information of a chunk
@@ -17,16 +19,16 @@ type ChunkInfo struct {
 // DecodeChunkInfo converts bytes to a ChunkInfo
 func DecodeChunkInfo(data []byte) ChunkInfo {
 	info := ChunkInfo{}
-	buf := data[:binary.Size(info)]
+	buf := data[:chunkInfoSize]
 	info.Size = int32(binary.LittleEndian.Uint32(buf))
 	return info
 }
 
 // EncodeChunkInfo converts a ChunkInfo to bytes
 func EncodeChunkInfo(info ChunkInfo) []byte {
-	buf := make([]byte, binary.Size(info))
-	binary.LittleEndian.PutUint32(buf, uint32(info.Size))
-	return buf
+	buf := [chunkInfoSize]byte{}
+	binary.LittleEndian.PutUint32(buf[:], uint32(info.Size))
+	return buf[:]
 }
 
 // ChunkStage encodes contiguous bytes into data chunks
