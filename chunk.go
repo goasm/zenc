@@ -63,12 +63,19 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 
 // Flush writes the rest of data to the underlying writer
 func (cs *ChunkStage) Flush() (err error) {
-	info := ChunkInfo{int32(cs.buffer.Len())}
-	_, err = cs.next.Write(EncodeChunkInfo(info))
-	if err != nil {
-		return
+	if cs.buffer.Len() > 0 {
+		info := ChunkInfo{int32(cs.buffer.Len())}
+		_, err = cs.next.Write(EncodeChunkInfo(info))
+		if err != nil {
+			return
+		}
+		_, err = cs.next.Write(cs.buffer.Bytes())
+		if err != nil {
+			return
+		}
 	}
-	_, err = cs.next.Write(cs.buffer.Bytes())
+	info := ChunkInfo{0}
+	_, err = cs.next.Write(EncodeChunkInfo(info))
 	if err != nil {
 		return
 	}
