@@ -40,7 +40,7 @@ func getSampleChunkData(limit int) *bytes.Buffer {
 func TestChunkSimple(t *testing.T) {
 	total := 100
 	out := getSampleChunkData(total)
-	if out.Len() != total+chunkHeadSize {
+	if out.Len() != total+chunkHeadSize*2 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
@@ -51,12 +51,16 @@ func TestChunkSimple(t *testing.T) {
 	if !bytes.Equal(chunk1, sample[:100]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
+	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	if size2 != 0 {
+		t.Fatal("ChunkStage writes a wrong chunk length", size2)
+	}
 }
 
 func TestChunkLarge(t *testing.T) {
 	total := 9000
 	out := getSampleChunkData(total)
-	if out.Len() != total+chunkHeadSize*3 {
+	if out.Len() != total+chunkHeadSize*4 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
@@ -82,6 +86,10 @@ func TestChunkLarge(t *testing.T) {
 	chunk3 := out.Next(808)
 	if !bytes.Equal(chunk3, sample[8192:9000]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
+	}
+	size4 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	if size4 != 0 {
+		t.Fatal("ChunkStage writes a wrong chunk length", size4)
 	}
 }
 
