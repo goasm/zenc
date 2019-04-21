@@ -5,17 +5,14 @@ import (
 	"encoding/binary"
 	"io"
 	"testing"
+	"unsafe"
 
 	"github.com/radonlab/zenc"
 )
 
-const (
-	chunkHeadSize int = 4
-)
+const chunkInfoSize = int(unsafe.Sizeof(zenc.ChunkInfo{}))
 
-var (
-	sample []byte
-)
+var sample []byte
 
 func init() {
 	sample = make([]byte, 10000)
@@ -48,10 +45,10 @@ func putSampleChunkData(data *bytes.Buffer) *bytes.Buffer {
 func TestWriteSingleChunk(t *testing.T) {
 	total := 100
 	out := getSampleChunkData(total)
-	if out.Len() != total+chunkHeadSize*2 {
+	if out.Len() != total+chunkInfoSize*2 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
-	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size1 != 100 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
@@ -59,7 +56,7 @@ func TestWriteSingleChunk(t *testing.T) {
 	if !bytes.Equal(chunk1, sample[:100]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size2 != 0 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
@@ -68,10 +65,10 @@ func TestWriteSingleChunk(t *testing.T) {
 func TestWriteMultipleChunks(t *testing.T) {
 	total := 9000
 	out := getSampleChunkData(total)
-	if out.Len() != total+chunkHeadSize*4 {
+	if out.Len() != total+chunkInfoSize*4 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
-	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size1 != 4096 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
@@ -79,7 +76,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 	if !bytes.Equal(chunk1, sample[:4096]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size2 != 4096 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
@@ -87,7 +84,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 	if !bytes.Equal(chunk2, sample[4096:8192]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size3 != 808 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size3)
 	}
@@ -95,7 +92,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 	if !bytes.Equal(chunk3, sample[8192:9000]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size4 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size4 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size4 != 0 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size4)
 	}
@@ -104,10 +101,10 @@ func TestWriteMultipleChunks(t *testing.T) {
 func TestWriteFullChunk(t *testing.T) {
 	total := 8192
 	out := getSampleChunkData(total)
-	if out.Len() != total+chunkHeadSize*3 {
+	if out.Len() != total+chunkInfoSize*3 {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
-	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size1 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size1 != 4096 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
@@ -115,7 +112,7 @@ func TestWriteFullChunk(t *testing.T) {
 	if !bytes.Equal(chunk1, sample[:4096]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size2 != 4096 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
@@ -123,7 +120,7 @@ func TestWriteFullChunk(t *testing.T) {
 	if !bytes.Equal(chunk2, sample[4096:8192]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
-	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkHeadSize)))
+	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
 	if size3 != 0 {
 		t.Fatal("ChunkStage writes a wrong chunk length", size3)
 	}

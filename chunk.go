@@ -4,13 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"unsafe"
 )
 
-const (
-	maxChunkSize  = 4096
-	chunkInfoSize = int(unsafe.Sizeof(ChunkInfo{}))
-)
+const maxChunkSize = 4096
 
 // ChunkInfo holds the information of a chunk
 type ChunkInfo struct {
