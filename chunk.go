@@ -3,6 +3,7 @@ package zenc
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
 	"unsafe"
 )
 
@@ -35,22 +36,33 @@ func EncodeChunkInfo(info ChunkInfo) []byte {
 type ChunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
+	ended  bool
 }
 
 // NewChunkStage creates a Stage for encoding data
 func NewChunkStage() *ChunkStage {
-	return &ChunkStage{MiddleStage{}, bytes.Buffer{}}
+	return &ChunkStage{MiddleStage{}, bytes.Buffer{}, false}
 }
 
 func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
-	length := len(buf)
-	for cs.buffer.Len() < length {
+	if cs.ended {
+		err = io.EOF
+		return
+	}
+	for cs.buffer.Len() < len(buf) {
 		prefix := [chunkInfoSize]byte{}
-		_, err = cs.next.Read(prefix[:])
-		if err != nil {
+		_, er := cs.next.Read(prefix[:])
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
 			break
 		}
 		info := DecodeChunkInfo(prefix[:])
+		if info.Size == 0 {
+			cs.ended = true
+			break
+		}
 		chunk := make([]byte, info.Size)
 		_, err = cs.next.Read(chunk)
 		if err != nil {

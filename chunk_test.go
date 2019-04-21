@@ -39,9 +39,9 @@ func getSampleChunkData(limit int) *bytes.Buffer {
 
 func putSampleChunkData(data *bytes.Buffer) *bytes.Buffer {
 	result := new(bytes.Buffer)
-	us := zenc.NewUnchunkStage()
-	us.SetNext(zenc.NewDestStage(result))
-	io.Copy(us, data)
+	cs := zenc.NewChunkStage()
+	cs.SetNext(zenc.NewDestStage(data))
+	io.Copy(result, cs)
 	return result
 }
 
