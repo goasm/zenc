@@ -134,14 +134,14 @@ func TestUnchunkSimple(t *testing.T) {
 	tmp := getSampleChunkData(total)
 	out := putSampleChunkData(tmp)
 	if out.Len() != total {
-		t.Fatal("UnchunkStage writes a wrong total length", out.Len())
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
 	if !bytes.Equal(chunk1, sample[:total]) {
-		t.Fatal("UnchunkStage writes mismatched chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != 0 {
-		t.Fatal("UnchunkStage reads wrong length of data")
+		t.Fatal("ChunkStage reads wrong length of data")
 	}
 }
 
@@ -150,14 +150,14 @@ func TestUnchunkLarge(t *testing.T) {
 	tmp := getSampleChunkData(total)
 	out := putSampleChunkData(tmp)
 	if out.Len() != total {
-		t.Fatal("UnchunkStage writes a wrong total length", out.Len())
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
 	if !bytes.Equal(chunk1, sample[:total]) {
-		t.Fatal("UnchunkStage writes mismatched chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != 0 {
-		t.Fatal("UnchunkStage reads wrong length of data")
+		t.Fatal("ChunkStage reads wrong length of data")
 	}
 }
 
@@ -168,16 +168,16 @@ func TestUnchunkInput(t *testing.T) {
 	tmp.Write(end)
 	out := putSampleChunkData(tmp)
 	if out.Len() != total {
-		t.Fatal("UnchunkStage writes a wrong total length", out.Len())
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
 	if !bytes.Equal(chunk1, sample[:total]) {
-		t.Fatal("UnchunkStage writes mismatched chunk data")
+		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != len(end) {
-		t.Fatal("UnchunkStage reads wrong length of data")
+		t.Fatal("ChunkStage reads wrong length of data")
 	}
 	if !bytes.Equal(tmp.Bytes(), end) {
-		t.Fatal("UnchunkStage reads mismatched data")
+		t.Fatal("ChunkStage reads mismatched data")
 	}
 }
