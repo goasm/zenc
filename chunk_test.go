@@ -29,12 +29,20 @@ func fillSequence(buf []byte) {
 }
 
 func getSampleChunkData(limit int) *bytes.Buffer {
-	data := new(bytes.Buffer)
+	result := new(bytes.Buffer)
 	cs := zenc.NewChunkStage()
-	cs.SetNext(zenc.NewDestStage(data))
+	cs.SetNext(zenc.NewDestStage(result))
 	io.Copy(cs, io.LimitReader(bytes.NewReader(sample), int64(limit)))
 	cs.Flush()
-	return data
+	return result
+}
+
+func putSampleChunkData(data *bytes.Buffer) *bytes.Buffer {
+	result := new(bytes.Buffer)
+	us := zenc.NewUnchunkStage()
+	us.SetNext(zenc.NewDestStage(result))
+	io.Copy(us, data)
+	return result
 }
 
 func TestChunkSimple(t *testing.T) {
@@ -122,22 +130,17 @@ func TestChunkFull(t *testing.T) {
 }
 
 func TestUnchunkSimple(t *testing.T) {
-	prefix := [4]byte{}
-	src := make([]byte, 100)
-	fillSequence(src)
-	binary.LittleEndian.PutUint32(prefix[:], uint32(100))
-	r := new(bytes.Buffer)
-	r.Write(prefix[:])
-	r.Write(src)
-	w := new(bytes.Buffer)
-	us := zenc.NewUnchunkStage()
-	us.SetNext(zenc.NewDestStage(w))
-	io.Copy(us, r)
-	if w.Len() != 100 {
-		t.Fatal("UnchunkStage writes a wrong total length", w.Len())
+	total := 100
+	tmp := getSampleChunkData(total)
+	out := putSampleChunkData(tmp)
+	if out.Len() != total {
+		t.Fatal("UnchunkStage writes a wrong total length", out.Len())
 	}
-	chunk := w.Next(100)
-	if chunk[0] != 0 || chunk[99] != 99 {
+	chunk1 := out.Next(100)
+	if !bytes.Equal(chunk1, sample[:100]) {
 		t.Fatal("UnchunkStage writes mismatched chunk data")
+	}
+	if tmp.Len() != 0 {
+		t.Fatal("UnchunkStage reads wrong length of data")
 	}
 }
