@@ -29,6 +29,12 @@ func NewCryptoStage(key string, iv []byte) *CryptoStage {
 	return &CryptoStage{MiddleStage{}, stream}
 }
 
+func (cs *CryptoStage) Read(buf []byte) (int, error) {
+	n, err := cs.next.Read(buf)
+	cs.stream.XORKeyStream(buf[:n], buf[:n])
+	return n, err
+}
+
 func (cs *CryptoStage) Write(data []byte) (int, error) {
 	cs.stream.XORKeyStream(data, data)
 	return cs.next.Write(data)

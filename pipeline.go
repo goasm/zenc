@@ -4,7 +4,7 @@ import "io"
 
 // Stage represents a data processing step of a Pipeline
 type Stage interface {
-	io.Writer
+	io.ReadWriter
 	SetNext(Stage)
 	Next() Stage
 }
