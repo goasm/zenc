@@ -42,6 +42,32 @@ func NewChunkStage() *ChunkStage {
 	return &ChunkStage{MiddleStage{}, bytes.Buffer{}}
 }
 
+func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
+	length := len(buf)
+	for cs.buffer.Len() < length {
+		prefix := [chunkInfoSize]byte{}
+		_, err = cs.next.Read(prefix[:])
+		if err != nil {
+			break
+		}
+		info := DecodeChunkInfo(prefix[:])
+		chunk := make([]byte, info.Size)
+		_, err = cs.next.Read(chunk)
+		if err != nil {
+			break
+		}
+		_, err = cs.buffer.Write(chunk)
+		if err != nil {
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+	n, err = cs.buffer.Read(buf)
+	return
+}
+
 func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	n, err = cs.buffer.Write(data)
 	if err != nil {
