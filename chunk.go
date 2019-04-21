@@ -17,19 +17,24 @@ type ChunkInfo struct {
 	Size int32
 }
 
-// DecodeChunkInfo converts bytes to a ChunkInfo
-func DecodeChunkInfo(data []byte) ChunkInfo {
-	info := ChunkInfo{}
-	buf := data[:chunkInfoSize]
-	info.Size = int32(binary.LittleEndian.Uint32(buf))
-	return info
+// ReadFrom reads the data of ChunkInfo from r
+func (ci *ChunkInfo) ReadFrom(r io.Reader) (n int64, err error) {
+	err = binary.Read(r, binary.LittleEndian, ci)
+	if err != nil {
+		return
+	}
+	n = int64(binary.Size(ci))
+	return
 }
 
-// EncodeChunkInfo converts a ChunkInfo to bytes
-func EncodeChunkInfo(info ChunkInfo) []byte {
-	buf := [chunkInfoSize]byte{}
-	binary.LittleEndian.PutUint32(buf[:], uint32(info.Size))
-	return buf[:]
+// WriteTo writes the data of ChunkInfo to w
+func (ci *ChunkInfo) WriteTo(w io.Writer) (n int64, err error) {
+	err = binary.Write(w, binary.LittleEndian, ci)
+	if err != nil {
+		return
+	}
+	n = int64(binary.Size(ci))
+	return
 }
 
 // ChunkStage encodes contiguous bytes into data chunks
@@ -50,15 +55,14 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 		return
 	}
 	for cs.buffer.Len() < len(buf) {
-		prefix := [chunkInfoSize]byte{}
-		_, er := cs.next.Read(prefix[:])
+		info := ChunkInfo{}
+		_, er := info.ReadFrom(cs.next)
 		if er != nil {
 			if er != io.EOF {
 				err = er
 			}
 			break
 		}
-		info := DecodeChunkInfo(prefix[:])
 		if info.Size == 0 {
 			// until chunk terminator reached
 			cs.ended = true
@@ -88,7 +92,7 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	}
 	for cs.buffer.Len() >= maxChunkSize {
 		info := ChunkInfo{maxChunkSize}
-		_, err = cs.next.Write(EncodeChunkInfo(info))
+		_, err = info.WriteTo(cs.next)
 		if err != nil {
 			break
 		}
@@ -104,7 +108,7 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 func (cs *ChunkStage) Flush() (err error) {
 	if cs.buffer.Len() > 0 {
 		info := ChunkInfo{int32(cs.buffer.Len())}
-		_, err = cs.next.Write(EncodeChunkInfo(info))
+		_, err = info.WriteTo(cs.next)
 		if err != nil {
 			return
 		}
@@ -115,7 +119,7 @@ func (cs *ChunkStage) Flush() (err error) {
 	}
 	// writes a chunk terminator
 	info := ChunkInfo{0}
-	_, err = cs.next.Write(EncodeChunkInfo(info))
+	_, err = info.WriteTo(cs.next)
 	if err != nil {
 		return
 	}
