@@ -60,6 +60,7 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 		}
 		info := DecodeChunkInfo(prefix[:])
 		if info.Size == 0 {
+			// until chunk terminator reached
 			cs.ended = true
 			break
 		}
@@ -112,6 +113,7 @@ func (cs *ChunkStage) Flush() (err error) {
 			return
 		}
 	}
+	// writes a chunk terminator
 	info := ChunkInfo{0}
 	_, err = cs.next.Write(EncodeChunkInfo(info))
 	if err != nil {
