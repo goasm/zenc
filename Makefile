@@ -12,3 +12,6 @@ build:
 
 clean:
 	rm -rf bin
+
+test:
+	go test
