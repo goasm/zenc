@@ -22,6 +22,10 @@ func (ds *DestStage) Next() Stage {
 	return nil
 }
 
+func (ds *DestStage) Read(buf []byte) (int, error) {
+	panic("zenc: cannot read from DestStage")
+}
+
 func (ds *DestStage) Write(data []byte) (int, error) {
 	return ds.dest.Write(data)
 }
