@@ -2,5 +2,8 @@ package zenc
 
 import "errors"
 
-var ErrWrongChecksum = errors.New("wrong checksum")
-var ErrLimitExceeded = errors.New("limit exceeded")
+// zenc errors
+var (
+	ErrWrongChecksum = errors.New("wrong checksum")
+	ErrLimitExceeded = errors.New("limit exceeded")
+)
