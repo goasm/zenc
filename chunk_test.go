@@ -45,7 +45,7 @@ func putSampleChunkData(data *bytes.Buffer) *bytes.Buffer {
 	return result
 }
 
-func TestChunkSimple(t *testing.T) {
+func TestWriteSingleChunk(t *testing.T) {
 	total := 100
 	out := getSampleChunkData(total)
 	if out.Len() != total+chunkHeadSize*2 {
@@ -65,7 +65,7 @@ func TestChunkSimple(t *testing.T) {
 	}
 }
 
-func TestChunkLarge(t *testing.T) {
+func TestWriteMultipleChunks(t *testing.T) {
 	total := 9000
 	out := getSampleChunkData(total)
 	if out.Len() != total+chunkHeadSize*4 {
@@ -101,7 +101,7 @@ func TestChunkLarge(t *testing.T) {
 	}
 }
 
-func TestChunkFull(t *testing.T) {
+func TestWriteFullChunk(t *testing.T) {
 	total := 8192
 	out := getSampleChunkData(total)
 	if out.Len() != total+chunkHeadSize*3 {
@@ -129,7 +129,7 @@ func TestChunkFull(t *testing.T) {
 	}
 }
 
-func TestUnchunkSimple(t *testing.T) {
+func TestReadSingleChunk(t *testing.T) {
 	total := 100
 	tmp := getSampleChunkData(total)
 	out := putSampleChunkData(tmp)
@@ -145,7 +145,7 @@ func TestUnchunkSimple(t *testing.T) {
 	}
 }
 
-func TestUnchunkLarge(t *testing.T) {
+func TestReadMultipleChunks(t *testing.T) {
 	total := 9000
 	tmp := getSampleChunkData(total)
 	out := putSampleChunkData(tmp)
@@ -161,7 +161,7 @@ func TestUnchunkLarge(t *testing.T) {
 	}
 }
 
-func TestUnchunkInput(t *testing.T) {
+func TestReadInputSize(t *testing.T) {
 	total := 5000
 	tmp := getSampleChunkData(total)
 	end := []byte{0x00, 0x01, 0x02, 0x03}
