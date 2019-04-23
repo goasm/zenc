@@ -37,12 +37,13 @@ func (ci *ChunkInfo) WriteTo(w io.Writer) (n int64, err error) {
 type ChunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
+	bucket []byte
 	ended  bool
 }
 
 // NewChunkStage creates a Stage for encoding data
 func NewChunkStage() *ChunkStage {
-	return &ChunkStage{MiddleStage{}, bytes.Buffer{}, false}
+	return &ChunkStage{MiddleStage{}, bytes.Buffer{}, nil, false}
 }
 
 func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
@@ -64,7 +65,10 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 			cs.ended = true
 			break
 		}
-		chunk := make([]byte, info.Size)
+		if cs.bucket == nil {
+			cs.bucket = make([]byte, maxChunkSize)
+		}
+		chunk := cs.bucket[:info.Size]
 		_, err = cs.next.Read(chunk)
 		if err != nil {
 			break
