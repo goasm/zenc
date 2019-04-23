@@ -178,3 +178,20 @@ func TestReadInputSize(t *testing.T) {
 		t.Fatal("ChunkStage reads mismatched data")
 	}
 }
+
+func TestReadIncompleteInput(t *testing.T) {
+	total := 100
+	tmp := getSampleChunkData(total)
+	tmp.Truncate(tmp.Len() - chunkInfoSize)
+	out := putSampleChunkData(tmp)
+	if out.Len() != total {
+		t.Fatal("ChunkStage writes a wrong total length", out.Len())
+	}
+	chunk1 := out.Next(total)
+	if !bytes.Equal(chunk1, sample[:total]) {
+		t.Fatal("ChunkStage writes mismatched chunk data")
+	}
+	if tmp.Len() != 0 {
+		t.Fatal("ChunkStage reads wrong length of data")
+	}
+}
