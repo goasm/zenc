@@ -17,8 +17,8 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	header := NewFileHeader()
 	footer := NewFileFooter()
 	pipeline := NewPipeline()
-	checksum := NewChecksumStage()
-	pipeline.AddStage(checksum)
+	checksumStage := NewChecksumStage()
+	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
 	pipeline.AddStage(NewDestStage(ofile))
@@ -30,7 +30,7 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	footer.Checksum = checksum.Sum
+	footer.Checksum = checksumStage.Sum
 	_, err = footer.WriteTo(ofile)
 	if err != nil {
 		return err
@@ -43,12 +43,12 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	header := FileHeader{}
 	footer := FileFooter{}
 	pipeline := NewPipeline()
-	checksum := NewChecksumStage()
+	checksumStage := NewChecksumStage()
 	_, err := header.ReadFrom(ifile)
 	if err != nil {
 		return err
 	}
-	pipeline.AddStage(checksum)
+	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
 	pipeline.AddStage(NewSourceStage(ifile))
@@ -60,7 +60,7 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	err = verifyChecksum(footer.Checksum, checksum.Sum)
+	err = verifyChecksum(footer.Checksum, checksumStage.Sum)
 	if err != nil {
 		return err
 	}
