@@ -45,6 +45,10 @@ func (p *Pipeline) AddStage(stage Stage) {
 	}
 }
 
+func (p *Pipeline) Read(buf []byte) (int, error) {
+	return p.head.Read(buf)
+}
+
 func (p *Pipeline) Write(data []byte) (int, error) {
 	return p.head.Write(data)
 }

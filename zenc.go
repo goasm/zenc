@@ -20,6 +20,7 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	checksum := NewChecksumStage()
 	pipeline.AddStage(checksum)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
+	pipeline.AddStage(NewChunkStage())
 	pipeline.AddStage(NewDestStage(ofile))
 	_, err := header.WriteTo(ofile)
 	if err != nil {
@@ -47,10 +48,11 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	if err != nil {
 		return err
 	}
-	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(checksum)
-	pipeline.AddStage(NewDestStage(ofile))
-	_, err = io.Copy(pipeline, ifile)
+	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
+	pipeline.AddStage(NewChunkStage())
+	pipeline.AddStage(NewSourceStage(ifile))
+	_, err = io.Copy(ofile, pipeline)
 	if err != nil {
 		return err
 	}
