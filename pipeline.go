@@ -42,6 +42,7 @@ func (p *Pipeline) AddStage(stage Stage) {
 		p.tail = p.head
 	} else {
 		p.tail.SetNext(stage)
+		p.tail = p.tail.Next()
 	}
 }
 
