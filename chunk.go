@@ -64,6 +64,10 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 			// until chunk terminator reached
 			cs.ended = true
 			break
+		} else if info.Size > maxChunkSize {
+			// max chunk size exceeded
+			err = ErrLimitExceeded
+			break
 		}
 		if cs.bucket == nil {
 			cs.bucket = make([]byte, maxChunkSize)
