@@ -17,15 +17,15 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	header := NewFileHeader()
 	footer := NewFileFooter()
 	pipeline := NewPipeline()
+	_, err := header.WriteTo(ofile)
+	if err != nil {
+		return err
+	}
 	checksumStage := NewChecksumStage()
 	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
 	pipeline.AddStage(NewDestStage(ofile))
-	_, err := header.WriteTo(ofile)
-	if err != nil {
-		return err
-	}
 	_, err = io.Copy(pipeline, ifile)
 	if err != nil {
 		return err
@@ -43,11 +43,11 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	header := FileHeader{}
 	footer := FileFooter{}
 	pipeline := NewPipeline()
-	checksumStage := NewChecksumStage()
 	_, err := header.ReadFrom(ifile)
 	if err != nil {
 		return err
 	}
+	checksumStage := NewChecksumStage()
 	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
