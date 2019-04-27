@@ -36,6 +36,7 @@ func (cs *CryptoStage) Read(buf []byte) (int, error) {
 }
 
 func (cs *CryptoStage) Write(data []byte) (int, error) {
-	cs.stream.XORKeyStream(data, data)
-	return cs.Next().Write(data)
+	buf := make([]byte, len(data))
+	cs.stream.XORKeyStream(buf, data)
+	return cs.Next().Write(buf)
 }

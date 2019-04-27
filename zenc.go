@@ -29,6 +29,10 @@ func EncryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	if err != nil {
 		return
 	}
+	err = pipeline.Close()
+	if err != nil {
+		return
+	}
 	footer.Checksum = checksumStage.Sum
 	_, err = footer.WriteTo(dst)
 	return
@@ -49,6 +53,10 @@ func DecryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	pipeline.AddStage(NewChunkStage())
 	pipeline.AddStage(NewSourceStage(src))
 	_, err = io.Copy(dst, pipeline)
+	if err != nil {
+		return
+	}
+	err = pipeline.Close()
 	if err != nil {
 		return
 	}

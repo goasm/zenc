@@ -27,5 +27,7 @@ func (ss *SourceStage) Read(buf []byte) (int, error) {
 }
 
 func (ss *SourceStage) Write(data []byte) (int, error) {
-	panic("zenc: cannot write to SourceStage")
+	// panic("zenc: cannot write to SourceStage")
+	// FIXME: need io checking
+	return 0, nil
 }
