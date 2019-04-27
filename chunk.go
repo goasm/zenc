@@ -88,6 +88,10 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 }
 
 func (cs *ChunkStage) Write(data []byte) (n int, err error) {
+	if cs.ended {
+		err = io.ErrClosedPipe
+		return
+	}
 	n, err = cs.buffer.Write(data)
 	if err != nil {
 		return
@@ -125,6 +129,7 @@ func (cs *ChunkStage) Flush() (err error) {
 
 // Close closes the ChunkStage; subsequent Read or Write will be rejected
 func (cs *ChunkStage) Close() (err error) {
+	cs.ended = true
 	err = cs.Flush()
 	if err != nil {
 		return
