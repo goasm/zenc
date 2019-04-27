@@ -16,20 +16,18 @@ type ChunkInfo struct {
 // ReadFrom reads the data of ChunkInfo from r
 func (ci *ChunkInfo) ReadFrom(r io.Reader) (n int64, err error) {
 	err = binary.Read(r, binary.LittleEndian, ci)
-	if err != nil {
-		return
+	if err == nil {
+		n = int64(binary.Size(ci))
 	}
-	n = int64(binary.Size(ci))
 	return
 }
 
 // WriteTo writes the data of ChunkInfo to w
 func (ci *ChunkInfo) WriteTo(w io.Writer) (n int64, err error) {
 	err = binary.Write(w, binary.LittleEndian, ci)
-	if err != nil {
-		return
+	if err == nil {
+		n = int64(binary.Size(ci))
 	}
-	n = int64(binary.Size(ci))
 	return
 }
 
