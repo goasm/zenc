@@ -14,12 +14,12 @@ func NewChecksumStage() *ChecksumStage {
 }
 
 func (cs *ChecksumStage) Read(buf []byte) (int, error) {
-	n, err := cs.next.Read(buf)
+	n, err := cs.Next().Read(buf)
 	cs.Sum = crc32.Update(cs.Sum, crc32.IEEETable, buf[:n])
 	return n, err
 }
 
 func (cs *ChecksumStage) Write(data []byte) (int, error) {
 	cs.Sum = crc32.Update(cs.Sum, crc32.IEEETable, data)
-	return cs.next.Write(data)
+	return cs.Next().Write(data)
 }

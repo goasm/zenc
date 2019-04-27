@@ -51,7 +51,7 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 	}
 	for cs.buffer.Len() < len(buf) {
 		info := ChunkInfo{}
-		_, er := info.ReadFrom(cs.next)
+		_, er := info.ReadFrom(cs.Next())
 		if er != nil {
 			if er != io.EOF {
 				err = er
@@ -71,7 +71,7 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 			cs.bucket = make([]byte, maxChunkSize)
 		}
 		chunk := cs.bucket[:info.Size]
-		_, err = cs.next.Read(chunk)
+		_, err = cs.Next().Read(chunk)
 		if err != nil {
 			break
 		}
@@ -94,11 +94,11 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	}
 	for cs.buffer.Len() >= maxChunkSize {
 		info := ChunkInfo{maxChunkSize}
-		_, err = info.WriteTo(cs.next)
+		_, err = info.WriteTo(cs.Next())
 		if err != nil {
 			break
 		}
-		_, err = cs.next.Write(cs.buffer.Next(maxChunkSize))
+		_, err = cs.Next().Write(cs.buffer.Next(maxChunkSize))
 		if err != nil {
 			break
 		}
@@ -110,17 +110,17 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 func (cs *ChunkStage) Flush() (err error) {
 	if cs.buffer.Len() > 0 {
 		info := ChunkInfo{int32(cs.buffer.Len())}
-		_, err = info.WriteTo(cs.next)
+		_, err = info.WriteTo(cs.Next())
 		if err != nil {
 			return
 		}
-		_, err = cs.next.Write(cs.buffer.Bytes())
+		_, err = cs.Next().Write(cs.buffer.Bytes())
 		if err != nil {
 			return
 		}
 	}
 	// writes chunk terminator
 	info := ChunkInfo{0}
-	_, err = info.WriteTo(cs.next)
+	_, err = info.WriteTo(cs.Next())
 	return
 }
