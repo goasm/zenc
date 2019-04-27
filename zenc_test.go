@@ -38,4 +38,12 @@ func TestZencDecryption(t *testing.T) {
 	src := bytes.NewBuffer(inputData)
 	tmp := new(bytes.Buffer)
 	dst := new(bytes.Buffer)
+	err := zenc.EncryptFile(src, tmp, "passwd123")
+	if err != nil {
+		t.Fatal("Unexpected error", err)
+	}
+	err = zenc.DecryptFile(tmp, dst, "passwd123")
+	if err != nil {
+		t.Fatal("Unexpected error", err)
+	}
 }
