@@ -2,7 +2,6 @@ package zenc
 
 import (
 	"io"
-	"os"
 )
 
 func verifyChecksum(expected, actual uint32) error {
@@ -13,11 +12,11 @@ func verifyChecksum(expected, actual uint32) error {
 }
 
 // EncryptFile encrypts file using the given password
-func EncryptFile(ifile, ofile *os.File, pass string) (err error) {
+func EncryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	header := NewFileHeader()
 	footer := NewFileFooter()
 	pipeline := NewPipeline()
-	_, err = header.WriteTo(ofile)
+	_, err = header.WriteTo(dst)
 	if err != nil {
 		return
 	}
@@ -25,22 +24,22 @@ func EncryptFile(ifile, ofile *os.File, pass string) (err error) {
 	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
-	pipeline.AddStage(NewDestStage(ofile))
-	_, err = io.Copy(pipeline, ifile)
+	pipeline.AddStage(NewDestStage(dst))
+	_, err = io.Copy(pipeline, src)
 	if err != nil {
 		return
 	}
 	footer.Checksum = checksumStage.Sum
-	_, err = footer.WriteTo(ofile)
+	_, err = footer.WriteTo(dst)
 	return
 }
 
 // DecryptFile decrypts file using the given password
-func DecryptFile(ifile, ofile *os.File, pass string) (err error) {
+func DecryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	header := FileHeader{}
 	footer := FileFooter{}
 	pipeline := NewPipeline()
-	_, err = header.ReadFrom(ifile)
+	_, err = header.ReadFrom(src)
 	if err != nil {
 		return
 	}
@@ -48,12 +47,12 @@ func DecryptFile(ifile, ofile *os.File, pass string) (err error) {
 	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
 	pipeline.AddStage(NewChunkStage())
-	pipeline.AddStage(NewSourceStage(ifile))
-	_, err = io.Copy(ofile, pipeline)
+	pipeline.AddStage(NewSourceStage(src))
+	_, err = io.Copy(dst, pipeline)
 	if err != nil {
 		return
 	}
-	_, err = footer.ReadFrom(ifile)
+	_, err = footer.ReadFrom(src)
 	if err != nil {
 		return
 	}
