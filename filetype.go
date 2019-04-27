@@ -15,15 +15,14 @@ type FileHeader struct {
 
 // NewFileHeader creates a new FileHeader
 func NewFileHeader() *FileHeader {
-	rd := [16]byte{}
-	_, err := rand.Read(rd[:])
-	if err != nil {
+	buf := [16]byte{}
+	if _, err := rand.Read(buf[:]); err != nil {
 		panic(err)
 	}
 	return &FileHeader{
 		Magic:   [4]byte{0x5A, 0x45, 0x4E, 0x43}, // ZENC
 		Version: [2]byte{0x01, 0x00},             // 1.0
-		IV:      rd,
+		IV:      buf,
 	}
 }
 
