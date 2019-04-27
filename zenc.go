@@ -13,13 +13,13 @@ func verifyChecksum(expected, actual uint32) error {
 }
 
 // EncryptFile encrypts file using the given password
-func EncryptFile(ifile, ofile *os.File, pass string) error {
+func EncryptFile(ifile, ofile *os.File, pass string) (err error) {
 	header := NewFileHeader()
 	footer := NewFileFooter()
 	pipeline := NewPipeline()
-	_, err := header.WriteTo(ofile)
+	_, err = header.WriteTo(ofile)
 	if err != nil {
-		return err
+		return
 	}
 	checksumStage := NewChecksumStage()
 	pipeline.AddStage(checksumStage)
@@ -28,24 +28,21 @@ func EncryptFile(ifile, ofile *os.File, pass string) error {
 	pipeline.AddStage(NewDestStage(ofile))
 	_, err = io.Copy(pipeline, ifile)
 	if err != nil {
-		return err
+		return
 	}
 	footer.Checksum = checksumStage.Sum
 	_, err = footer.WriteTo(ofile)
-	if err != nil {
-		return err
-	}
-	return nil
+	return
 }
 
 // DecryptFile decrypts file using the given password
-func DecryptFile(ifile, ofile *os.File, pass string) error {
+func DecryptFile(ifile, ofile *os.File, pass string) (err error) {
 	header := FileHeader{}
 	footer := FileFooter{}
 	pipeline := NewPipeline()
-	_, err := header.ReadFrom(ifile)
+	_, err = header.ReadFrom(ifile)
 	if err != nil {
-		return err
+		return
 	}
 	checksumStage := NewChecksumStage()
 	pipeline.AddStage(checksumStage)
@@ -54,15 +51,12 @@ func DecryptFile(ifile, ofile *os.File, pass string) error {
 	pipeline.AddStage(NewSourceStage(ifile))
 	_, err = io.Copy(ofile, pipeline)
 	if err != nil {
-		return err
+		return
 	}
 	_, err = footer.ReadFrom(ifile)
 	if err != nil {
-		return err
+		return
 	}
 	err = verifyChecksum(footer.Checksum, checksumStage.Sum)
-	if err != nil {
-		return err
-	}
-	return nil
+	return
 }
