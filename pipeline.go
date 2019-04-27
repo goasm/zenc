@@ -2,14 +2,14 @@ package zenc
 
 import "io"
 
-// Stage represents a data processing step of a Pipeline
+// Stage represents a data processing step of Pipeline
 type Stage interface {
 	io.ReadWriter
 	SetNext(Stage)
 	Next() Stage
 }
 
-// MiddleStage processes data and writes them to next Stage
+// MiddleStage processes data and writes them to next stage
 type MiddleStage struct {
 	next Stage
 }
@@ -33,7 +33,7 @@ func (ms *MiddleStage) Close() error {
 	return nil
 }
 
-// Pipeline represents a data flow consisting of one or more Stages
+// Pipeline represents a data flow consisting of one or more stages
 type Pipeline struct {
 	head Stage
 	tail Stage
@@ -44,7 +44,7 @@ func NewPipeline() *Pipeline {
 	return &Pipeline{nil, nil}
 }
 
-// AddStage adds a Stage at the end of the Pipeline
+// AddStage adds the stage at the end of the Pipeline
 func (p *Pipeline) AddStage(stage Stage) {
 	if p.head == nil {
 		p.head = stage
