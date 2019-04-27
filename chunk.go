@@ -122,8 +122,5 @@ func (cs *ChunkStage) Flush() (err error) {
 	// writes chunk terminator
 	info := ChunkInfo{0}
 	_, err = info.WriteTo(cs.next)
-	if err != nil {
-		return
-	}
 	return
 }
