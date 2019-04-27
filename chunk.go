@@ -108,16 +108,26 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 
 // Flush writes the rest of data to the underlying writer
 func (cs *ChunkStage) Flush() (err error) {
-	if cs.buffer.Len() > 0 {
-		info := ChunkInfo{int32(cs.buffer.Len())}
-		_, err = info.WriteTo(cs.Next())
-		if err != nil {
-			return
-		}
-		_, err = cs.Next().Write(cs.buffer.Bytes())
-		if err != nil {
-			return
-		}
+	if cs.buffer.Len() == 0 {
+		return
+	}
+	info := ChunkInfo{int32(cs.buffer.Len())}
+	_, err = info.WriteTo(cs.Next())
+	if err != nil {
+		return
+	}
+	_, err = cs.Next().Write(cs.buffer.Bytes())
+	if err != nil {
+		return
+	}
+	return
+}
+
+// Close closes the ChunkStage; subsequent Read or Write will be rejected
+func (cs *ChunkStage) Close() (err error) {
+	err = cs.Flush()
+	if err != nil {
+		return
 	}
 	// writes chunk terminator
 	info := ChunkInfo{0}
