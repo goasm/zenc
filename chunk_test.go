@@ -12,11 +12,11 @@ import (
 
 const chunkInfoSize = int(unsafe.Sizeof(zenc.ChunkInfo{}))
 
-var sample []byte
+var rawData []byte
 
 func init() {
-	sample = make([]byte, 10000)
-	fillSequence(sample)
+	rawData = make([]byte, 10000)
+	fillSequence(rawData)
 }
 
 func fillSequence(buf []byte) {
@@ -29,7 +29,7 @@ func getSampleChunkData(limit int) *bytes.Buffer {
 	result := new(bytes.Buffer)
 	cs := zenc.NewChunkStage()
 	cs.SetNext(zenc.NewDestStage(result))
-	io.Copy(cs, io.LimitReader(bytes.NewReader(sample), int64(limit)))
+	io.Copy(cs, io.LimitReader(bytes.NewReader(rawData), int64(limit)))
 	cs.Flush()
 	return result
 }
@@ -53,7 +53,7 @@ func TestWriteSingleChunk(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
 	chunk1 := out.Next(100)
-	if !bytes.Equal(chunk1, sample[:100]) {
+	if !bytes.Equal(chunk1, rawData[:100]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -73,7 +73,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
 	chunk1 := out.Next(4096)
-	if !bytes.Equal(chunk1, sample[:4096]) {
+	if !bytes.Equal(chunk1, rawData[:4096]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -81,7 +81,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
 	chunk2 := out.Next(4096)
-	if !bytes.Equal(chunk2, sample[4096:8192]) {
+	if !bytes.Equal(chunk2, rawData[4096:8192]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -89,7 +89,7 @@ func TestWriteMultipleChunks(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size3)
 	}
 	chunk3 := out.Next(808)
-	if !bytes.Equal(chunk3, sample[8192:9000]) {
+	if !bytes.Equal(chunk3, rawData[8192:9000]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size4 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -109,7 +109,7 @@ func TestWriteFullChunk(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size1)
 	}
 	chunk1 := out.Next(4096)
-	if !bytes.Equal(chunk1, sample[:4096]) {
+	if !bytes.Equal(chunk1, rawData[:4096]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size2 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -117,7 +117,7 @@ func TestWriteFullChunk(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong chunk length", size2)
 	}
 	chunk2 := out.Next(4096)
-	if !bytes.Equal(chunk2, sample[4096:8192]) {
+	if !bytes.Equal(chunk2, rawData[4096:8192]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	size3 := int(binary.LittleEndian.Uint32(out.Next(chunkInfoSize)))
@@ -134,7 +134,7 @@ func TestReadSingleChunk(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
-	if !bytes.Equal(chunk1, sample[:total]) {
+	if !bytes.Equal(chunk1, rawData[:total]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != 0 {
@@ -150,7 +150,7 @@ func TestReadMultipleChunks(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
-	if !bytes.Equal(chunk1, sample[:total]) {
+	if !bytes.Equal(chunk1, rawData[:total]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != 0 {
@@ -168,7 +168,7 @@ func TestReadInputSize(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
-	if !bytes.Equal(chunk1, sample[:total]) {
+	if !bytes.Equal(chunk1, rawData[:total]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != len(end) {
@@ -188,7 +188,7 @@ func TestReadIncompleteInput(t *testing.T) {
 		t.Fatal("ChunkStage writes a wrong total length", out.Len())
 	}
 	chunk1 := out.Next(total)
-	if !bytes.Equal(chunk1, sample[:total]) {
+	if !bytes.Equal(chunk1, rawData[:total]) {
 		t.Fatal("ChunkStage writes mismatched chunk data")
 	}
 	if tmp.Len() != 0 {
