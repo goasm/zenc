@@ -30,7 +30,7 @@ func TestZencEncryption(t *testing.T) {
 	dst := new(bytes.Buffer)
 	err := zenc.EncryptFile(src, dst, "passwd123")
 	if err != nil {
-		t.Fatal("Unexpected error", err)
+		t.Fatal("Unexpected error:", err)
 	}
 }
 
@@ -40,10 +40,13 @@ func TestZencDecryption(t *testing.T) {
 	dst := new(bytes.Buffer)
 	err := zenc.EncryptFile(src, tmp, "passwd123")
 	if err != nil {
-		t.Fatal("Unexpected error", err)
+		t.Fatal("Unexpected error:", err)
 	}
 	err = zenc.DecryptFile(tmp, dst, "passwd123")
 	if err != nil {
-		t.Fatal("Unexpected error", err)
+		t.Fatal("Unexpected error:", err)
+	}
+	if !bytes.Equal(dst.Bytes(), inputData) {
+		t.Fatal("Decryption failed, mismatched data")
 	}
 }
