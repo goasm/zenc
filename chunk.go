@@ -130,6 +130,10 @@ func (cs *ChunkStage) Flush() (err error) {
 // Close closes the ChunkStage; subsequent Read or Write will be rejected
 func (cs *ChunkStage) Close() (err error) {
 	cs.ended = true
+	if cs.bucket != nil {
+		// skip in read mode
+		return
+	}
 	err = cs.Flush()
 	if err != nil {
 		return
