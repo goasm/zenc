@@ -24,12 +24,11 @@ func (ms *MiddleStage) Next() Stage {
 	return ms.next
 }
 
-// Close closes the next of this Stage
+func (ms *MiddleStage) Init() error {
+	return nil
+}
+
 func (ms *MiddleStage) Close() error {
-	c, ok := ms.next.(io.Closer)
-	if ok {
-		return c.Close()
-	}
 	return nil
 }
 
@@ -63,11 +62,16 @@ func (p *Pipeline) Write(data []byte) (int, error) {
 	return p.head.Write(data)
 }
 
-// Close closes the first stage of the Pipeline
+// Close closes every stage of the Pipeline
 func (p *Pipeline) Close() error {
-	c, ok := p.head.(io.Closer)
-	if ok {
-		return c.Close()
+	for s := p.head; s != nil; s = s.Next() {
+		c, ok := s.(io.Closer)
+		if ok {
+			err := c.Close()
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
