@@ -45,46 +45,7 @@ func NewChunkStage() *ChunkStage {
 }
 
 func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
-	if cs.ended {
-		err = io.EOF
-		return
-	}
-	for cs.buffer.Len() < len(buf) {
-		info := ChunkInfo{}
-		_, er := info.ReadFrom(cs.Next())
-		if er != nil {
-			if er != io.EOF {
-				err = er
-			}
-			break
-		}
-		if info.Size == 0 {
-			// until chunk terminator reached
-			cs.ended = true
-			break
-		} else if info.Size > maxChunkSize {
-			// max chunk size exceeded
-			err = ErrLimitExceeded
-			break
-		}
-		if cs.bucket == nil {
-			cs.bucket = make([]byte, maxChunkSize)
-		}
-		chunk := cs.bucket[:info.Size]
-		_, err = cs.Next().Read(chunk)
-		if err != nil {
-			break
-		}
-		_, err = cs.buffer.Write(chunk)
-		if err != nil {
-			break
-		}
-	}
-	if err != nil {
-		return
-	}
-	n, err = cs.buffer.Read(buf)
-	return
+	panic("zenc: cannot read from ChunkStage")
 }
 
 func (cs *ChunkStage) Write(data []byte) (n int, err error) {
@@ -142,4 +103,64 @@ func (cs *ChunkStage) Close() (err error) {
 	info := ChunkInfo{0}
 	_, err = info.WriteTo(cs.Next())
 	return
+}
+
+// DechunkStage decodes chunks of data to contiguous bytes
+type DechunkStage struct {
+	MiddleStage
+	buffer bytes.Buffer
+	bucket []byte
+	ended  bool
+}
+
+// NewDechunkStage creates a Stage for decoding chunks
+func NewDechunkStage() *DechunkStage {
+	return &DechunkStage{MiddleStage{}, bytes.Buffer{}, nil, false}
+}
+
+func (ds *DechunkStage) Read(buf []byte) (n int, err error) {
+	if ds.ended {
+		err = io.EOF
+		return
+	}
+	for ds.buffer.Len() < len(buf) {
+		info := ChunkInfo{}
+		_, er := info.ReadFrom(ds.Next())
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
+			break
+		}
+		if info.Size == 0 {
+			// until chunk terminator reached
+			ds.ended = true
+			break
+		} else if info.Size > maxChunkSize {
+			// max chunk size exceeded
+			err = ErrLimitExceeded
+			break
+		}
+		if ds.bucket == nil {
+			ds.bucket = make([]byte, maxChunkSize)
+		}
+		chunk := ds.bucket[:info.Size]
+		_, err = ds.Next().Read(chunk)
+		if err != nil {
+			break
+		}
+		_, err = ds.buffer.Write(chunk)
+		if err != nil {
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+	n, err = ds.buffer.Read(buf)
+	return
+}
+
+func (ds *DechunkStage) Write(data []byte) (n int, err error) {
+	panic("zenc: cannot write to DechunkStage")
 }
