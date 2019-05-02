@@ -35,13 +35,11 @@ func (ci *ChunkInfo) WriteTo(w io.Writer) (n int64, err error) {
 type ChunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
-	bucket []byte
-	ended  bool
 }
 
 // NewChunkStage creates a Stage for encoding data
 func NewChunkStage() *ChunkStage {
-	return &ChunkStage{MiddleStage{}, bytes.Buffer{}, nil, false}
+	return &ChunkStage{MiddleStage{}, bytes.Buffer{}}
 }
 
 func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
@@ -49,10 +47,6 @@ func (cs *ChunkStage) Read(buf []byte) (n int, err error) {
 }
 
 func (cs *ChunkStage) Write(data []byte) (n int, err error) {
-	if cs.ended {
-		err = io.ErrClosedPipe
-		return
-	}
 	n, err = cs.buffer.Write(data)
 	if err != nil {
 		return
@@ -71,7 +65,7 @@ func (cs *ChunkStage) Write(data []byte) (n int, err error) {
 	return
 }
 
-// Flush writes the rest of data to the underlying writer
+// Flush writes the buffered data to the underlying writer
 func (cs *ChunkStage) Flush() (err error) {
 	if cs.buffer.Len() == 0 {
 		return
@@ -88,13 +82,8 @@ func (cs *ChunkStage) Flush() (err error) {
 	return
 }
 
-// Close closes the ChunkStage; subsequent Read or Write will be rejected
+// Close flushes the buffer and ends the chunk stream
 func (cs *ChunkStage) Close() (err error) {
-	cs.ended = true
-	if cs.bucket != nil {
-		// skip in read mode
-		return
-	}
 	err = cs.Flush()
 	if err != nil {
 		return
@@ -115,7 +104,7 @@ type DechunkStage struct {
 
 // NewDechunkStage creates a Stage for decoding chunks
 func NewDechunkStage() *DechunkStage {
-	return &DechunkStage{MiddleStage{}, bytes.Buffer{}, nil, false}
+	return &DechunkStage{MiddleStage{}, bytes.Buffer{}, make([]byte, maxChunkSize), false}
 }
 
 func (ds *DechunkStage) Read(buf []byte) (n int, err error) {
@@ -140,9 +129,6 @@ func (ds *DechunkStage) Read(buf []byte) (n int, err error) {
 			// max chunk size exceeded
 			err = ErrLimitExceeded
 			break
-		}
-		if ds.bucket == nil {
-			ds.bucket = make([]byte, maxChunkSize)
 		}
 		chunk := ds.bucket[:info.Size]
 		_, err = ds.Next().Read(chunk)
