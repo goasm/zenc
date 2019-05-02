@@ -31,7 +31,7 @@ func (ci *ChunkInfo) WriteTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-// ChunkStage encodes contiguous bytes into data chunks
+// ChunkStage encodes contiguous bytes into chunks
 type ChunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
@@ -105,7 +105,7 @@ func (cs *ChunkStage) Close() (err error) {
 	return
 }
 
-// DechunkStage decodes chunks of data to contiguous bytes
+// DechunkStage decodes chunks to contiguous bytes
 type DechunkStage struct {
 	MiddleStage
 	buffer bytes.Buffer
