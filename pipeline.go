@@ -24,14 +24,6 @@ func (ms *MiddleStage) Next() Stage {
 	return ms.next
 }
 
-func (ms *MiddleStage) Init() error {
-	return nil
-}
-
-func (ms *MiddleStage) Close() error {
-	return nil
-}
-
 // Pipeline represents a data flow consisting of one or more stages
 type Pipeline struct {
 	head Stage
@@ -62,8 +54,7 @@ func (p *Pipeline) Write(data []byte) (int, error) {
 	return p.head.Write(data)
 }
 
-// Close closes every stage of the Pipeline
-func (p *Pipeline) Close() error {
+func (p *Pipeline) closeStages() error {
 	for s := p.head; s != nil; s = s.Next() {
 		c, ok := s.(io.Closer)
 		if ok {
@@ -74,4 +65,9 @@ func (p *Pipeline) Close() error {
 		}
 	}
 	return nil
+}
+
+// Close closes every stage of the Pipeline
+func (p *Pipeline) Close() error {
+	return p.closeStages()
 }
