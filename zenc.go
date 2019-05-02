@@ -50,7 +50,7 @@ func DecryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	checksumStage := NewChecksumStage()
 	pipeline.AddStage(checksumStage)
 	pipeline.AddStage(NewCryptoStage(pass, header.IV[:]))
-	pipeline.AddStage(NewChunkStage())
+	pipeline.AddStage(NewDechunkStage())
 	pipeline.AddStage(NewSourceStage(src))
 	_, err = io.Copy(dst, pipeline)
 	if err != nil {
