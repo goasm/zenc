@@ -29,10 +29,18 @@ func init() {
 	flag.StringVarP(&output, "output", "o", "", "file to write output\nUse - to write to standard output")
 }
 
-func usageError(message string) {
-	fmt.Fprintln(os.Stderr, "error:", message)
-	flag.Usage()
-	os.Exit(1)
+// UsageError means there is a problem with command usage
+type UsageError struct {
+	message string
+}
+
+// NewUsageError creates an UsageError with a message
+func NewUsageError(message string) *UsageError {
+	return &UsageError{message}
+}
+
+func (e *UsageError) Error() string {
+	return e.message
 }
 
 func openInput() *os.File {
@@ -88,7 +96,7 @@ func process() {
 			dst.Close()
 		}
 	default:
-		usageError("missing option [-e|-d]")
+		panic(NewUsageError("missing option [-e|-d]"))
 	}
 }
 
@@ -102,11 +110,16 @@ func main() {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
+			switch err.(type) {
+			case *UsageError:
+				flag.Usage()
+			}
 			os.Exit(1)
 		}
 	}()
+	// run main process
 	if flag.NArg() < 1 {
-		usageError("missing input file")
+		panic(NewUsageError("not enough arguments"))
 	}
 	input = flag.Arg(0)
 	process()
