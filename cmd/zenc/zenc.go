@@ -67,6 +67,19 @@ func openOutput() *os.File {
 	return file
 }
 
+func cleanup() {
+	if output == "-" {
+		return
+	}
+	if _, err := os.Stat(output); err == nil {
+		// output exists
+		err := os.Remove(output)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func process() {
 	switch {
 	case encrypt:
@@ -113,6 +126,8 @@ func main() {
 			switch err.(type) {
 			case *UsageError:
 				flag.Usage()
+			default:
+				cleanup()
 			}
 			os.Exit(1)
 		}
