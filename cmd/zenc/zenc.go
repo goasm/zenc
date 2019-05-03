@@ -64,7 +64,10 @@ func process() {
 	case encrypt:
 		src := openInput()
 		dst := openOutput()
-		zenc.EncryptFile(src, dst, passwd)
+		err := zenc.EncryptFile(src, dst, passwd)
+		if err != nil {
+			panic(err)
+		}
 		if src != os.Stdin {
 			src.Close()
 		}
@@ -74,7 +77,10 @@ func process() {
 	case decrypt:
 		src := openInput()
 		dst := openOutput()
-		zenc.DecryptFile(src, dst, passwd)
+		err := zenc.DecryptFile(src, dst, passwd)
+		if err != nil {
+			panic(err)
+		}
 		if src != os.Stdin {
 			src.Close()
 		}
@@ -92,6 +98,13 @@ func main() {
 		flag.Usage()
 		return
 	}
+	// handle errors
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+	}()
 	if flag.NArg() < 1 {
 		usageError("missing input file")
 	}
