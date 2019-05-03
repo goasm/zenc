@@ -67,49 +67,45 @@ func openOutput() *os.File {
 	return file
 }
 
+func closeFile(fp *os.File) {
+	if fp != os.Stdin && fp != os.Stdout {
+		if err := fp.Close(); err != nil {
+			panic(err)
+		}
+	}
+}
+
 func cleanup() {
 	if output == "-" {
 		return
 	}
 	if _, err := os.Stat(output); err == nil {
 		// output exists
-		err := os.Remove(output)
-		if err != nil {
+		if err := os.Remove(output); err != nil {
 			panic(err)
 		}
 	}
 }
 
 func process() {
+	if !(encrypt || decrypt) {
+		panic(NewUsageError("missing option [-e|-d]"))
+	}
+	var err error
+	src := openInput()
+	dst := openOutput()
+	defer func() {
+		closeFile(src)
+		closeFile(dst)
+	}()
 	switch {
 	case encrypt:
-		src := openInput()
-		dst := openOutput()
-		err := zenc.EncryptFile(src, dst, passwd)
-		if err != nil {
-			panic(err)
-		}
-		if src != os.Stdin {
-			src.Close()
-		}
-		if dst != os.Stdout {
-			dst.Close()
-		}
+		err = zenc.EncryptFile(src, dst, passwd)
 	case decrypt:
-		src := openInput()
-		dst := openOutput()
-		err := zenc.DecryptFile(src, dst, passwd)
-		if err != nil {
-			panic(err)
-		}
-		if src != os.Stdin {
-			src.Close()
-		}
-		if dst != os.Stdout {
-			dst.Close()
-		}
-	default:
-		panic(NewUsageError("missing option [-e|-d]"))
+		err = zenc.DecryptFile(src, dst, passwd)
+	}
+	if err != nil {
+		panic(err)
 	}
 }
 
