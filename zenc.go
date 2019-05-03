@@ -1,8 +1,16 @@
 package zenc
 
 import (
+	"bytes"
 	"io"
 )
+
+func verifyFileType(header FileHeader) error {
+	if !bytes.Equal(header.Magic[:], Magic[:]) {
+		return ErrWrongFileType
+	}
+	return nil
+}
 
 func verifyChecksum(expected, actual uint32) error {
 	if expected != actual {
@@ -44,6 +52,10 @@ func DecryptFile(src io.Reader, dst io.Writer, pass string) (err error) {
 	footer := FileFooter{}
 	pipeline := NewPipeline()
 	_, err = header.ReadFrom(src)
+	if err != nil {
+		return
+	}
+	err = verifyFileType(header)
 	if err != nil {
 		return
 	}

@@ -6,10 +6,16 @@ import (
 	"io"
 )
 
+// File header constants
+var (
+	Magic   = [4]byte{0x5A, 0x45, 0x4E, 0x43} // ZENC
+	Version = [4]byte{0x00, 0x01, 0x00, 0x00} // 0.1.0.0
+)
+
 // FileHeader is used to identify encrypted file
 type FileHeader struct {
 	Magic   [4]byte
-	Version [2]byte
+	Version [4]byte
 	IV      [16]byte
 }
 
@@ -20,8 +26,8 @@ func NewFileHeader() *FileHeader {
 		panic(err)
 	}
 	return &FileHeader{
-		Magic:   [4]byte{0x5A, 0x45, 0x4E, 0x43}, // ZENC
-		Version: [2]byte{0x01, 0x00},             // 1.0
+		Magic:   Magic,
+		Version: Version,
 		IV:      buf,
 	}
 }
