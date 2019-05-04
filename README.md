@@ -25,3 +25,13 @@ zenc [OPTION...] FILE
 | --decrypt | -d        | decrypt file           |
 | --passwd  | -p        | password to be applied |
 | --output  | -o        | file to write output   |
+
+### Programmatically
+
+```go
+var err error
+// encryption
+err = zenc.EncryptFile(reader, writer, password)
+// or decryption
+err = zenc.DecryptFile(reader, writer, password)
+```
