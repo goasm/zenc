@@ -35,3 +35,7 @@ err = zenc.EncryptFile(reader, writer, password)
 // or decryption
 err = zenc.DecryptFile(reader, writer, password)
 ```
+
+## License
+
+The MIT License.
