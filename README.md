@@ -28,6 +28,10 @@ zenc [OPTION...] FILE
 
 ### Programmatically
 
+```
+go get -u github.com/radonlab/zenc
+```
+
 ```go
 var err error
 // encryption
