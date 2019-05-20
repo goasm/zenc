@@ -87,6 +87,19 @@ func cleanup() {
 	}
 }
 
+func handleError() {
+	if err := recover(); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		switch err.(type) {
+		case *UsageError:
+			flag.Usage()
+		default:
+			cleanup()
+		}
+		os.Exit(1)
+	}
+}
+
 func process() {
 	if !(encrypt || decrypt) {
 		panic(NewUsageError("missing option [-e|-d]"))
@@ -110,28 +123,18 @@ func process() {
 }
 
 func main() {
+	// handle errors
+	defer handleError()
+	// parse flags
 	flag.Parse()
 	if help {
 		flag.Usage()
 		return
 	}
-	// handle errors
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-			switch err.(type) {
-			case *UsageError:
-				flag.Usage()
-			default:
-				cleanup()
-			}
-			os.Exit(1)
-		}
-	}()
-	// run main process
 	if flag.NArg() < 1 {
 		panic(NewUsageError("not enough arguments"))
 	}
+	// run main process
 	input = flag.Arg(0)
 	process()
 }
