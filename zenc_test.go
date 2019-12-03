@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/radonlab/zenc"
+	"github.com/goasm/zenc"
 )
 
 var inputData []byte

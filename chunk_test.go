@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/radonlab/zenc"
+	"github.com/goasm/zenc"
 )
 
 const chunkInfoSize = int(unsafe.Sizeof(zenc.ChunkInfo{}))

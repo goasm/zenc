@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/radonlab/zenc"
+	"github.com/goasm/zenc"
 	flag "github.com/spf13/pflag"
 )
 

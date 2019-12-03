@@ -1,13 +1,13 @@
 # ZENC
 
-[![Build Status](https://travis-ci.org/radonlab/zenc.svg?branch=master)](https://travis-ci.org/radonlab/zenc)
+[![Build Status](https://travis-ci.org/goasm/zenc.svg?branch=master)](https://travis-ci.org/goasm/zenc)
 
 ZENC is a command-line tool, a library and also a file format for data encryption.
 
 ## Installation
 
 ```
-go get -u github.com/radonlab/zenc/cmd/zenc
+go get -u github.com/goasm/zenc/cmd/zenc
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ zenc [OPTION...] FILE
 ### Programmatically
 
 ```
-go get -u github.com/radonlab/zenc
+go get -u github.com/goasm/zenc
 ```
 
 ```go
