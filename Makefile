@@ -1,17 +1,18 @@
 BUILD_FLAGS := -ldflags "-s -w"
-OUTPUT_PATH := $(PWD)/bin
+OUTPUT_PATH := ./bin/
 
 .PHONY: default
-
 default: build
 
-build: export GOBIN = $(OUTPUT_PATH)
+.PHONY: build
 build:
-	go install $(BUILD_FLAGS) ./cmd/...
+	go build -o $(OUTPUT_PATH) $(BUILD_FLAGS) ./cmd/...
 	@echo "Build done"
 
+.PHONY: clean
 clean:
 	rm -rf bin
 
+.PHONY: test
 test:
 	go test
